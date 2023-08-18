@@ -48,6 +48,8 @@ jobs:
 
       - name: Update metrics
         run: ./ph/update-all.sh
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
