@@ -240,19 +240,19 @@
 				unitsElement.hide();
 			}
 
-			var valueFontSize = 30;
+			var valueFontSize = "30px";
 
 			if(newSettings.size == "big")
 			{
-				valueFontSize = 75;
+				valueFontSize = "calc(min(8vw,75px))";
 
 				if(newSettings.sparkline)
 				{
-					valueFontSize = 60;
+					valueFontSize = "60px";
 				}
 			}
 
-			valueElement.css({"font-size" : valueFontSize + "px"});
+			valueElement.css({"font-size" : valueFontSize});
 
 			updateValueSizing();
         }
