@@ -1,0 +1,653 @@
+{
+	"version": 1,
+	"allow_edit": false,
+	"plugins": [],
+	"panes": [
+		{
+			"width": 1,
+			"row": {
+				"1": 1,
+				"3": 1
+			},
+			"col": {
+				"1": 1,
+				"3": 1
+			},
+			"col_width": 3,
+			"widgets": [
+				{
+					"type": "text_widget",
+					"settings": {
+						"title": "",
+						"size": "big",
+						"value": "Shaka Player Health",
+						"animate": false
+					}
+				}
+			]
+		},
+		{
+			"title": "",
+			"width": 1,
+			"row": {
+				"1": 2,
+				"3": 2
+			},
+			"col": {
+				"1": 1,
+				"3": 1
+			},
+			"col_width": 1,
+			"widgets": [
+				{
+					"type": "text_widget",
+					"settings": {
+						"title": "",
+						"size": "regular",
+						"value": "PH (90d)",
+						"animate": false,
+						"units": ""
+					}
+				},
+				{
+					"type": "PHIndicator",
+					"settings": {
+						"title": "Avg. Release Granularity",
+						"data": "datasources[\"PH-90\"][\"release_granularity\"]",
+						"format": "number",
+						"decimalPlaces": 1,
+						"units": "PRs",
+						"goingUp": false,
+						"threshold2": 1000,
+						"threshold3": 500,
+						"threshold4": 100,
+						"threshold5": 10
+					}
+				},
+				{
+					"type": "PHIndicator",
+					"settings": {
+						"title": "Avg. Release Duration",
+						"data": "datasources[\"PH-90\"][\"release_duration\"]",
+						"format": "duration",
+						"decimalPlaces": 1,
+						"units": "",
+						"goingUp": false,
+						"threshold2": 1814400,
+						"threshold3": 604800,
+						"threshold4": 259200,
+						"threshold5": 21600
+					}
+				},
+				{
+					"type": "PHIndicator",
+					"settings": {
+						"title": "Avg. Test Latency",
+						"data": "datasources[\"PH-90\"][\"test_latency\"]",
+						"format": "duration",
+						"decimalPlaces": 1,
+						"units": "",
+						"goingUp": false,
+						"threshold2": 2100,
+						"threshold3": 1500,
+						"threshold4": 900,
+						"threshold5": 600
+					}
+				},
+				{
+					"type": "PHIndicator",
+					"settings": {
+						"title": "Avg. Test Greenness",
+						"data": "datasources[\"PH-90\"][\"test_greenness\"]",
+						"format": "percentage",
+						"decimalPlaces": 1,
+						"units": "",
+						"goingUp": true,
+						"threshold2": 0.6,
+						"threshold3": 0.74,
+						"threshold4": 0.9,
+						"threshold5": 0.95
+					}
+				},
+				{
+					"type": "PHIndicator",
+					"settings": {
+						"title": "Avg. Test Flakiness",
+						"data": "datasources[\"PH-90\"][\"test_flakiness\"]",
+						"format": "percentage",
+						"decimalPlaces": 1,
+						"units": "",
+						"goingUp": false,
+						"threshold2": 0.2,
+						"threshold3": 0.07,
+						"threshold4": 0.04,
+						"threshold5": 0.02
+					}
+				},
+				{
+					"type": "PHIndicator",
+					"settings": {
+						"title": "Latest Test Coverage",
+						"data": "datasources[\"PH-90\"][\"test_coverage\"]",
+						"format": "percentage",
+						"decimalPlaces": 1,
+						"units": "",
+						"goingUp": true,
+						"threshold2": 0,
+						"threshold3": 0.6,
+						"threshold4": 0.75,
+						"threshold5": 0.9
+					}
+				},
+				{
+					"type": "PHIndicator",
+					"settings": {
+						"title": "Avg. Δ Test Coverage",
+						"data": "datasources[\"PH-90\"][\"incremental_coverage\"]",
+						"format": "percentage",
+						"decimalPlaces": 1,
+						"units": "",
+						"goingUp": true,
+						"threshold2": 0,
+						"threshold3": 0.7,
+						"threshold4": 0.8,
+						"threshold5": 0.9
+					}
+				}
+			]
+		},
+		{
+			"width": 1,
+			"row": {
+				"1": 3,
+				"3": 2
+			},
+			"col": {
+				"1": 1,
+				"3": 2
+			},
+			"col_width": 1,
+			"widgets": [
+				{
+					"type": "text_widget",
+					"settings": {
+						"title": "",
+						"size": "regular",
+						"value": "PH (30d)",
+						"animate": false,
+						"units": ""
+					}
+				},
+				{
+					"type": "PHIndicator",
+					"settings": {
+						"title": "Avg. Release Granularity",
+						"data": "datasources[\"PH-30\"][\"release_granularity\"]",
+						"format": "number",
+						"decimalPlaces": 1,
+						"units": "PRs",
+						"goingUp": false,
+						"threshold2": 1000,
+						"threshold3": 500,
+						"threshold4": 100,
+						"threshold5": 10
+					}
+				},
+				{
+					"type": "PHIndicator",
+					"settings": {
+						"title": "Avg. Release Duration",
+						"data": "datasources[\"PH-30\"][\"release_duration\"]",
+						"format": "duration",
+						"decimalPlaces": 1,
+						"units": "",
+						"goingUp": false,
+						"threshold2": 1814400,
+						"threshold3": 604800,
+						"threshold4": 259200,
+						"threshold5": 21600
+					}
+				},
+				{
+					"type": "PHIndicator",
+					"settings": {
+						"title": "Avg. Test Latency",
+						"data": "datasources[\"PH-30\"][\"test_latency\"]",
+						"format": "duration",
+						"decimalPlaces": 1,
+						"units": "",
+						"goingUp": false,
+						"threshold2": 2100,
+						"threshold3": 1500,
+						"threshold4": 900,
+						"threshold5": 600
+					}
+				},
+				{
+					"type": "PHIndicator",
+					"settings": {
+						"title": "Avg. Test Greenness",
+						"data": "datasources[\"PH-30\"][\"test_greenness\"]",
+						"format": "percentage",
+						"decimalPlaces": 1,
+						"units": "",
+						"goingUp": true,
+						"threshold2": 0.6,
+						"threshold3": 0.74,
+						"threshold4": 0.9,
+						"threshold5": 0.95
+					}
+				},
+				{
+					"type": "PHIndicator",
+					"settings": {
+						"title": "Avg. Test Flakiness",
+						"data": "datasources[\"PH-30\"][\"test_flakiness\"]",
+						"format": "percentage",
+						"decimalPlaces": 1,
+						"units": "",
+						"goingUp": false,
+						"threshold2": 0.2,
+						"threshold3": 0.07,
+						"threshold4": 0.04,
+						"threshold5": 0.02
+					}
+				},
+				{
+					"type": "PHIndicator",
+					"settings": {
+						"title": "Latest Test Coverage",
+						"data": "datasources[\"PH-30\"][\"test_coverage\"]",
+						"format": "percentage",
+						"decimalPlaces": 1,
+						"units": "",
+						"goingUp": true,
+						"threshold2": 0,
+						"threshold3": 0.6,
+						"threshold4": 0.75,
+						"threshold5": 0.9
+					}
+				},
+				{
+					"type": "PHIndicator",
+					"settings": {
+						"title": "Avg. Δ Test Coverage",
+						"data": "datasources[\"PH-30\"][\"incremental_coverage\"]",
+						"format": "percentage",
+						"decimalPlaces": 1,
+						"units": "",
+						"goingUp": true,
+						"threshold2": 0,
+						"threshold3": 0.7,
+						"threshold4": 0.8,
+						"threshold5": 0.9
+					}
+				}
+			]
+		},
+		{
+			"title": "",
+			"width": 1,
+			"row": {
+				"1": 4,
+				"3": 2
+			},
+			"col": {
+				"1": 1,
+				"3": 3
+			},
+			"col_width": 1,
+			"widgets": [
+				{
+					"type": "text_widget",
+					"settings": {
+						"title": "",
+						"size": "regular",
+						"value": "PH (7d)",
+						"animate": false,
+						"units": ""
+					}
+				},
+				{
+					"type": "PHIndicator",
+					"settings": {
+						"title": "Avg. Release Granularity",
+						"data": "datasources[\"PH-7\"][\"release_granularity\"]",
+						"format": "number",
+						"decimalPlaces": 1,
+						"units": "PRs",
+						"goingUp": false,
+						"threshold2": 1000,
+						"threshold3": 500,
+						"threshold4": 100,
+						"threshold5": 10
+					}
+				},
+				{
+					"type": "PHIndicator",
+					"settings": {
+						"title": "Avg. Release Duration",
+						"data": "datasources[\"PH-7\"][\"release_duration\"]",
+						"format": "duration",
+						"decimalPlaces": 1,
+						"units": "",
+						"goingUp": false,
+						"threshold2": 1814400,
+						"threshold3": 604800,
+						"threshold4": 259200,
+						"threshold5": 21600
+					}
+				},
+				{
+					"type": "PHIndicator",
+					"settings": {
+						"title": "Avg. Test Latency",
+						"data": "datasources[\"PH-7\"][\"test_latency\"]",
+						"format": "duration",
+						"decimalPlaces": 1,
+						"units": "",
+						"goingUp": false,
+						"threshold2": 2100,
+						"threshold3": 1500,
+						"threshold4": 900,
+						"threshold5": 600
+					}
+				},
+				{
+					"type": "PHIndicator",
+					"settings": {
+						"title": "Avg. Test Greenness",
+						"data": "datasources[\"PH-7\"][\"test_greenness\"]",
+						"format": "percentage",
+						"decimalPlaces": 1,
+						"units": "",
+						"goingUp": true,
+						"threshold2": 0.6,
+						"threshold3": 0.74,
+						"threshold4": 0.9,
+						"threshold5": 0.95
+					}
+				},
+				{
+					"type": "PHIndicator",
+					"settings": {
+						"title": "Avg. Test Flakiness",
+						"data": "datasources[\"PH-7\"][\"test_flakiness\"]",
+						"format": "percentage",
+						"decimalPlaces": 1,
+						"units": "",
+						"goingUp": false,
+						"threshold2": 0.2,
+						"threshold3": 0.07,
+						"threshold4": 0.04,
+						"threshold5": 0.02
+					}
+				},
+				{
+					"type": "PHIndicator",
+					"settings": {
+						"title": "Latest Test Coverage",
+						"data": "datasources[\"PH-7\"][\"test_coverage\"]",
+						"format": "percentage",
+						"decimalPlaces": 1,
+						"units": "",
+						"goingUp": true,
+						"threshold2": 0,
+						"threshold3": 0.6,
+						"threshold4": 0.75,
+						"threshold5": 0.9
+					}
+				},
+				{
+					"type": "PHIndicator",
+					"settings": {
+						"title": "Avg. Δ Test Coverage",
+						"data": "datasources[\"PH-7\"][\"incremental_coverage\"]",
+						"format": "percentage",
+						"decimalPlaces": 1,
+						"units": "",
+						"goingUp": true,
+						"threshold2": 0,
+						"threshold3": 0.7,
+						"threshold4": 0.8,
+						"threshold5": 0.9
+					}
+				}
+			]
+		},
+		{
+			"width": 1,
+			"row": {
+				"1": 5,
+				"3": 3
+			},
+			"col": {
+				"1": 1,
+				"3": 1
+			},
+			"col_width": 1,
+			"widgets": [
+				{
+					"type": "text_widget",
+					"settings": {
+						"title": "",
+						"size": "regular",
+						"value": "Release Gran.",
+						"units": "PRs",
+						"animate": false
+					}
+				},
+				{
+					"type": "jqPlotWidget",
+					"settings": {
+						"id": "release-granularity",
+						"data": "[ datasources[\"PH-90\"][\"releases\"].filter(r => r.num_commits).map(r => r.num_commits) ]",
+						"options": "{\n  grid: {\n    background: \"#333\",\n  },\n  axes: {\n    xaxis: {\n      pad: 1.01,\n      tickOptions: {\n        show: false,\n      },\n    },\n    yaxis: {\n      pad: 1.5,\n      min: 0,\n    },\n  },\n  series: [{\n    pointLabels: {\n      show: true,\n      labels: datasources[\"PH-90\"][\"releases\"].filter(r => r.num_commits).map(r => r.name).map((name, index, arr) => (name > (arr[index + 1] || '') ? name : '')),\n    },\n    showMarker: false,\n  }],\n}",
+						"chartHeight": 180,
+						"chartWidth": 310,
+						"height": 3
+					}
+				}
+			]
+		},
+		{
+			"width": 1,
+			"row": {
+				"1": 6,
+				"3": 3
+			},
+			"col": {
+				"1": 1,
+				"3": 2
+			},
+			"col_width": 1,
+			"widgets": [
+				{
+					"type": "text_widget",
+					"settings": {
+						"title": "",
+						"size": "regular",
+						"value": "Release Duration",
+						"units": "days",
+						"animate": false
+					}
+				},
+				{
+					"type": "jqPlotWidget",
+					"settings": {
+						"id": "release-durations",
+						"data": "[ datasources[\"PH-90\"][\"releases\"].map( r => r.duration / 86400 ) ]",
+						"options": "{\n  grid: {\n    background: \"#333\",\n  },\n  axes: {\n    xaxis: {\n      pad: 1.0,\n      tickOptions: {\n        show: false,\n      },\n    },\n    yaxis: {\n      pad: 1.2,\n      min: 0,\n    },\n  },\n  series: [{\n    pointLabels: {\n      show: true,\n      labels: datasources[\"PH-90\"][\"releases\"].map((r, index) => index % 5 ? \"\" : r.name),\n    },\n    showMarker: false,\n  }],\n}",
+						"chartHeight": 180,
+						"chartWidth": 310,
+						"height": 3
+					}
+				}
+			]
+		},
+		{
+			"width": 1,
+			"row": {
+				"1": 7,
+				"3": 3
+			},
+			"col": {
+				"1": 1,
+				"3": 3
+			},
+			"col_width": 1,
+			"widgets": [
+				{
+					"type": "text_widget",
+					"settings": {
+						"size": "regular",
+						"value": "Test Latency",
+						"units": "minutes",
+						"animate": false
+					}
+				},
+				{
+					"type": "jqPlotWidget",
+					"settings": {
+						"id": "test-latency",
+						"data": "[ datasources[\"PH-90\"][\"latency_runs\"].map(r => r.duration / 60) ]",
+						"options": "{\n  grid: {\n    background: \"#333\",\n  },\n  axes: {\n    xaxis: {\n      pad: 1.0,\n      tickOptions: {\n        show: false,\n      },\n    },\n    yaxis: {\n      pad: 1.2,\n      min: 0,\n    },\n  },\n  series: [{\n    showMarker: false,\n  }],\n}",
+						"chartHeight": 180,
+						"chartWidth": 310,
+						"height": 3
+					}
+				}
+			]
+		},
+		{
+			"width": 1,
+			"row": {
+				"1": 8,
+				"3": 4
+			},
+			"col": {
+				"1": 1,
+				"3": 1
+			},
+			"col_width": 1,
+			"widgets": [
+				{
+					"type": "text_widget",
+					"settings": {
+						"size": "regular",
+						"value": "Nightly Tests",
+						"animate": false
+					}
+				},
+				{
+					"type": "html",
+					"settings": {
+						"html": "`<span style=\"font-size: 100%; line-height: 1.0\">${datasources[\"PH-90\"][\"green_runs\"].map(r => r.passed ? (r.flaky ? \"🔵\" : \"🟢\") : \"🔴\").join(\" \")}</span>`",
+						"height": 3
+					}
+				}
+			]
+		},
+		{
+			"width": 1,
+			"row": {
+				"1": 9,
+				"3": 4
+			},
+			"col": {
+				"1": 1,
+				"3": 2
+			},
+			"col_width": 1,
+			"widgets": [
+				{
+					"type": "text_widget",
+					"settings": {
+						"size": "regular",
+						"value": "Total Coverage",
+						"units": "% lines",
+						"animate": false
+					}
+				},
+				{
+					"type": "jqPlotWidget",
+					"settings": {
+						"id": "test-coverage",
+						"data": "[\n  datasources[\"PH-90\"][\"coverage_summaries\"].map(s => s.line_coverage * 100)\n]",
+						"options": "{\n  grid: {\n    background: \"#333\",\n  },\n  axes: {\n    xaxis: {\n      pad: 1.0,\n      tickOptions: {\n        show: false,\n      },\n    },\n    yaxis: {\n      pad: 1.2,\n    },\n  },\n  series: [{\n    showMarker: false,\n  }],\n}",
+						"chartHeight": 180,
+						"chartWidth": 310,
+						"height": 3
+					}
+				}
+			]
+		},
+		{
+			"width": 1,
+			"row": {
+				"1": 10,
+				"3": 4
+			},
+			"col": {
+				"1": 1,
+				"3": 3
+			},
+			"col_width": 1,
+			"widgets": [
+				{
+					"type": "text_widget",
+					"settings": {
+						"size": "regular",
+						"value": "Δ Coverage",
+						"units": "% Δ lines",
+						"animate": false
+					}
+				},
+				{
+					"type": "jqPlotWidget",
+					"settings": {
+						"id": "incremental-coverage",
+						"data": "[\n  datasources[\"PH-90\"][\"merged_prs\"].map(pr => pr.num_instrumented_lines == null ? null : (pr.num_instrumented_lines ? 100 * pr.num_covered_lines / pr.num_instrumented_lines : 100))\n]",
+						"options": "{\n  grid: {\n    background: \"#333\",\n  },\n  axes: {\n    xaxis: {\n      pad: 1.0,\n      tickOptions: {\n        show: false,\n      },\n    },\n    yaxis: {\n      pad: 1.2,\n      min: 0,\n      max: 100,\n    },\n  },\n  series: [{\n    pointLabels: {\n      show: false,\n    },\n    showMarker: false,\n  }],\n}",
+						"chartHeight": 180,
+						"chartWidth": 310,
+						"height": 3
+					}
+				}
+			]
+		}
+	],
+	"datasources": [
+		{
+			"name": "PH-90",
+			"type": "JSON",
+			"settings": {
+				"url": "ph-90.json",
+				"use_thingproxy": false,
+				"refresh": 86400,
+				"method": "GET"
+			}
+		},
+		{
+			"name": "PH-30",
+			"type": "JSON",
+			"settings": {
+				"url": "ph-30.json",
+				"use_thingproxy": false,
+				"refresh": 86400,
+				"method": "GET"
+			}
+		},
+		{
+			"name": "PH-7",
+			"type": "JSON",
+			"settings": {
+				"url": "ph-7.json",
+				"use_thingproxy": false,
+				"refresh": 86400,
+				"method": "GET"
+			}
+		}
+	],
+	"columns": 3
+}
