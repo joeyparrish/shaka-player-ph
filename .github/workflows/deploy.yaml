@@ -43,6 +43,9 @@ jobs:
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v3
 
+      - name: Install Python requirements
+        run: pip install -r ph/requirements.txt
+
       - name: Update metrics
         run: ./ph/update-all.sh
 
