@@ -1,5 +1,5 @@
-Freeboard comes from https://github.com/Freeboard/freeboard and is licensed
-under the MIT License:
+Freeboard (freeboard/) comes from https://github.com/Freeboard/freeboard and is
+licensed under the MIT License:
 
 The MIT License (MIT)
 
@@ -26,15 +26,16 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 =====
 
 
-Freeboard jqPlot Widget Plugin comes from
+Freeboard jqPlot Widget Plugin (freeboard-jqplot/) comes from
 https://github.com/jritsema/freeboard-jqplot
 
 
 =====
 
 
-Freeboard PH Widget Plugin is original to this repository, and is licensed
-under the Apache License, version 2.0.
+Freeboard PH Widget Plugin (freeboard-ph/) and PH Metrics Collection (ph/) are
+original to this repository, and are licensed under the Apache License, version
+2.0.
 
 Copyright 2023 Google LLC
 
