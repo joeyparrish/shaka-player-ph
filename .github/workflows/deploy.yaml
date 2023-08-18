@@ -1,0 +1,56 @@
+# Update metrics and deploy to GitHub Pages
+name: Update and deploy
+
+on:
+  # Runs on pushes to main
+  push:
+    branches: ["main"]
+
+  # Runs every morning at 5am PST / 1pm UTC
+  schedule:
+    - cron: "0 13 * * *"
+
+  # Can be runs manually, too
+  workflow_dispatch:
+
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+
+# Allow only one concurrent deployment.  However, do NOT cancel in-progress
+# runs.  Let deployments complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v3
+
+      - name: Update metrics
+        run: ./ph/update-all.sh
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: "."
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
