@@ -16,6 +16,9 @@ The raw data that drives all this is collected by Python scripts that live in
 the `ph/` folder.  They call the GitHub API through the `gh` command-line tool,
 then process the data into JSON files that are consumed by freeboard.
 
+A GitHub Actions workflow updates the metrics and deploys everything to GitHub
+Pages every morning.
+
 
 [freeboard]: https://github.com/Freeboard/freeboard)
 [freeboard-jqplot]: https://github.com/jritsema/freeboard-jqplot
