@@ -2,6 +2,7 @@
 	"version": 1,
 	"allow_edit": false,
 	"plugins": [],
+	"header_image" : "https://raw.githubusercontent.com/shaka-project/shaka-project.github.io/main/logo.png",
 	"panes": [
 		{
 			"width": 1,
