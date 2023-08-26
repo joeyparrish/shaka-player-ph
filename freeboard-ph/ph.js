@@ -136,6 +136,7 @@
     onSettingsChanged(settings) {
       this.settings_ = settings;
       this.titleElement_.html(this.settings_.title || '');
+      this.titleElement_.attr('title', this.settings_.tooltip || '');
       this.updateState_();
     }
 
@@ -158,6 +159,11 @@
       {
         name: 'title',
         display_name: 'Title',
+        type: 'text',
+      },
+      {
+        name: 'tooltip',
+        display_name: 'Tooltip',
         type: 'text',
       },
       {

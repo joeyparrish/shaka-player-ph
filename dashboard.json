@@ -54,6 +54,7 @@
 					"type": "PHIndicator",
 					"settings": {
 						"title": "Avg. Release Granularity",
+						"tooltip": "lower is better",
 						"data": "datasources[\"PH-90\"][\"release_granularity\"]",
 						"format": "number",
 						"decimalPlaces": 1,
@@ -69,6 +70,7 @@
 					"type": "PHIndicator",
 					"settings": {
 						"title": "Avg. Release Duration",
+						"tooltip": "lower is better",
 						"data": "datasources[\"PH-90\"][\"release_duration\"]",
 						"format": "duration",
 						"decimalPlaces": 1,
@@ -84,6 +86,7 @@
 					"type": "PHIndicator",
 					"settings": {
 						"title": "Avg. Test Latency",
+						"tooltip": "lower is better",
 						"data": "datasources[\"PH-90\"][\"test_latency\"]",
 						"format": "duration",
 						"decimalPlaces": 1,
@@ -99,6 +102,7 @@
 					"type": "PHIndicator",
 					"settings": {
 						"title": "Avg. Test Greenness",
+						"tooltip": "higher is better",
 						"data": "datasources[\"PH-90\"][\"test_greenness\"]",
 						"format": "percentage",
 						"decimalPlaces": 1,
@@ -114,6 +118,7 @@
 					"type": "PHIndicator",
 					"settings": {
 						"title": "Avg. Test Flakiness",
+						"tooltip": "lower is better",
 						"data": "datasources[\"PH-90\"][\"test_flakiness\"]",
 						"format": "percentage",
 						"decimalPlaces": 1,
@@ -129,6 +134,7 @@
 					"type": "PHIndicator",
 					"settings": {
 						"title": "Latest Test Coverage",
+						"tooltip": "higher is better",
 						"data": "datasources[\"PH-90\"][\"test_coverage\"]",
 						"format": "percentage",
 						"decimalPlaces": 1,
@@ -144,6 +150,7 @@
 					"type": "PHIndicator",
 					"settings": {
 						"title": "Avg. Δ Test Coverage",
+						"tooltip": "higher is better",
 						"data": "datasources[\"PH-90\"][\"incremental_coverage\"]",
 						"format": "percentage",
 						"decimalPlaces": 1,
@@ -183,6 +190,7 @@
 					"type": "PHIndicator",
 					"settings": {
 						"title": "Avg. Release Granularity",
+						"tooltip": "lower is better",
 						"data": "datasources[\"PH-30\"][\"release_granularity\"]",
 						"format": "number",
 						"decimalPlaces": 1,
@@ -198,6 +206,7 @@
 					"type": "PHIndicator",
 					"settings": {
 						"title": "Avg. Release Duration",
+						"tooltip": "lower is better",
 						"data": "datasources[\"PH-30\"][\"release_duration\"]",
 						"format": "duration",
 						"decimalPlaces": 1,
@@ -213,6 +222,7 @@
 					"type": "PHIndicator",
 					"settings": {
 						"title": "Avg. Test Latency",
+						"tooltip": "lower is better",
 						"data": "datasources[\"PH-30\"][\"test_latency\"]",
 						"format": "duration",
 						"decimalPlaces": 1,
@@ -228,6 +238,7 @@
 					"type": "PHIndicator",
 					"settings": {
 						"title": "Avg. Test Greenness",
+						"tooltip": "higher is better",
 						"data": "datasources[\"PH-30\"][\"test_greenness\"]",
 						"format": "percentage",
 						"decimalPlaces": 1,
@@ -243,6 +254,7 @@
 					"type": "PHIndicator",
 					"settings": {
 						"title": "Avg. Test Flakiness",
+						"tooltip": "lower is better",
 						"data": "datasources[\"PH-30\"][\"test_flakiness\"]",
 						"format": "percentage",
 						"decimalPlaces": 1,
@@ -258,6 +270,7 @@
 					"type": "PHIndicator",
 					"settings": {
 						"title": "Latest Test Coverage",
+						"tooltip": "higher is better",
 						"data": "datasources[\"PH-30\"][\"test_coverage\"]",
 						"format": "percentage",
 						"decimalPlaces": 1,
@@ -273,6 +286,7 @@
 					"type": "PHIndicator",
 					"settings": {
 						"title": "Avg. Δ Test Coverage",
+						"tooltip": "higher is better",
 						"data": "datasources[\"PH-30\"][\"incremental_coverage\"]",
 						"format": "percentage",
 						"decimalPlaces": 1,
@@ -313,6 +327,7 @@
 					"type": "PHIndicator",
 					"settings": {
 						"title": "Avg. Release Granularity",
+						"tooltip": "lower is better",
 						"data": "datasources[\"PH-7\"][\"release_granularity\"]",
 						"format": "number",
 						"decimalPlaces": 1,
@@ -328,6 +343,7 @@
 					"type": "PHIndicator",
 					"settings": {
 						"title": "Avg. Release Duration",
+						"tooltip": "lower is better",
 						"data": "datasources[\"PH-7\"][\"release_duration\"]",
 						"format": "duration",
 						"decimalPlaces": 1,
@@ -343,6 +359,7 @@
 					"type": "PHIndicator",
 					"settings": {
 						"title": "Avg. Test Latency",
+						"tooltip": "lower is better",
 						"data": "datasources[\"PH-7\"][\"test_latency\"]",
 						"format": "duration",
 						"decimalPlaces": 1,
@@ -358,6 +375,7 @@
 					"type": "PHIndicator",
 					"settings": {
 						"title": "Avg. Test Greenness",
+						"tooltip": "higher is better",
 						"data": "datasources[\"PH-7\"][\"test_greenness\"]",
 						"format": "percentage",
 						"decimalPlaces": 1,
@@ -373,6 +391,7 @@
 					"type": "PHIndicator",
 					"settings": {
 						"title": "Avg. Test Flakiness",
+						"tooltip": "lower is better",
 						"data": "datasources[\"PH-7\"][\"test_flakiness\"]",
 						"format": "percentage",
 						"decimalPlaces": 1,
@@ -388,6 +407,7 @@
 					"type": "PHIndicator",
 					"settings": {
 						"title": "Latest Test Coverage",
+						"tooltip": "higher is better",
 						"data": "datasources[\"PH-7\"][\"test_coverage\"]",
 						"format": "percentage",
 						"decimalPlaces": 1,
@@ -403,6 +423,7 @@
 					"type": "PHIndicator",
 					"settings": {
 						"title": "Avg. Δ Test Coverage",
+						"tooltip": "higher is better",
 						"data": "datasources[\"PH-7\"][\"incremental_coverage\"]",
 						"format": "percentage",
 						"decimalPlaces": 1,
