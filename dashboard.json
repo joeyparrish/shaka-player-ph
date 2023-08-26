@@ -455,6 +455,7 @@
 						"title": "",
 						"size": "regular",
 						"value": "Release Gran.",
+						"tooltip": "lower is better",
 						"units": "PRs",
 						"animate": false
 					}
@@ -490,6 +491,7 @@
 						"title": "",
 						"size": "regular",
 						"value": "Release Duration",
+						"tooltip": "lower is better",
 						"units": "days",
 						"animate": false
 					}
@@ -524,6 +526,7 @@
 					"settings": {
 						"size": "regular",
 						"value": "Test Latency",
+						"tooltip": "lower is better",
 						"units": "minutes",
 						"animate": false
 					}
@@ -587,6 +590,7 @@
 					"settings": {
 						"size": "regular",
 						"value": "Total Coverage",
+						"tooltip": "higher is better",
 						"units": "% lines",
 						"animate": false
 					}
@@ -621,6 +625,7 @@
 					"settings": {
 						"size": "regular",
 						"value": "Δ Coverage",
+						"tooltip": "higher is better",
 						"units": "% Δ lines",
 						"animate": false
 					}

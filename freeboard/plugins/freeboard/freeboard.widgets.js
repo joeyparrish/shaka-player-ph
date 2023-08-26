@@ -176,6 +176,8 @@
         var unitsElement = $('<div class="tw-unit"></div>');
         var sparklineElement = $('<div class="tw-sparkline tw-td"></div>');
 
+        valueElement.attr('title', settings.tooltip);
+
 		function updateValueSizing()
 		{
 			if(!_.isUndefined(currentSettings.units) && currentSettings.units != "") // If we're displaying our units
@@ -325,6 +327,11 @@
                 name: "value",
                 display_name: "Value",
                 type: "calculated"
+            },
+            {
+                name: "tooltip",
+                display_name: "Tooltip",
+                type: "text"
             },
             {
                 name: "sparkline",
