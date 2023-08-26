@@ -101,11 +101,11 @@
       }
 
       if (this.settings_.format == Format.PERCENT) {
-        return this.round_(data * 100) + "%";
+        return this.round_(data * 100) + '%';
       } else if (this.settings_.format == Format.DURATION) {
         return this.formatDuration_(data);
       } else {
-        return this.round_(data) + " " + this.settings_.units;
+        return this.round_(data) + ' ' + this.settings_.units;
       }
     }
 
@@ -135,7 +135,7 @@
 
     onSettingsChanged(settings) {
       this.settings_ = settings;
-      this.titleElement_.html(this.settings_.title || "");
+      this.titleElement_.html(this.settings_.title || '');
       this.updateState_();
     }
 
@@ -152,23 +152,23 @@
   }
 
   freeboard.loadWidgetPlugin({
-    type_name: "PHIndicator",
-    display_name: "PH Indicator",
+    type_name: 'PHIndicator',
+    display_name: 'PH Indicator',
     settings: [
       {
-        name: "title",
-        display_name: "Title",
-        type: "text",
+        name: 'title',
+        display_name: 'Title',
+        type: 'text',
       },
       {
-        name: "data",
-        display_name: "Any numeric data",
-        type: "calculated",
+        name: 'data',
+        display_name: 'Any numeric data',
+        type: 'calculated',
       },
       {
-        name: "format",
-        display_name: "Data format",
-        type: "option",
+        name: 'format',
+        display_name: 'Data format',
+        type: 'option',
         options: [
           Format.NUMBER,
           Format.PERCENT,
@@ -177,42 +177,42 @@
         default_value: Format.NUMBER,
       },
       {
-        name: "decimalPlaces",
-        display_name: "# decimal places",
-        type: "number",
+        name: 'decimalPlaces',
+        display_name: '# decimal places',
+        type: 'number',
         default_value: 1,
       },
       {
-        name: "units",
-        display_name: "Units for number format",
-        type: "text",
-        default_value: "",
+        name: 'units',
+        display_name: 'Units for number format',
+        type: 'text',
+        default_value: '',
       },
       {
-        name: "goingUp",
-        display_name: "Increasing values better?",
-        type: "boolean",
+        name: 'goingUp',
+        display_name: 'Increasing values better?',
+        type: 'boolean',
         default_value: true,
       },
       {
-        name: "threshold2",
-        display_name: "PH2 threshold",
-        type: "number",
+        name: 'threshold2',
+        display_name: 'PH2 threshold',
+        type: 'number',
       },
       {
-        name: "threshold3",
-        display_name: "PH3 threshold",
-        type: "number",
+        name: 'threshold3',
+        display_name: 'PH3 threshold',
+        type: 'number',
       },
       {
-        name: "threshold4",
-        display_name: "PH4 threshold",
-        type: "number",
+        name: 'threshold4',
+        display_name: 'PH4 threshold',
+        type: 'number',
       },
       {
-        name: "threshold5",
-        display_name: "PH5 threshold",
-        type: "number",
+        name: 'threshold5',
+        display_name: 'PH5 threshold',
+        type: 'number',
       },
     ],
     newInstance: (settings, newInstanceCallback) => {
