@@ -565,9 +565,9 @@
 					}
 				},
 				{
-					"type": "html",
+					"type": "test_runs",
 					"settings": {
-						"html": "`<span style=\"font-size: 100%; line-height: 1.0\">${datasources[\"PH-90\"][\"green_runs\"].map(r => r.passed ? (r.flaky ? \"🔵\" : \"🟢\") : \"🔴\").join(\" \")}</span>`",
+						"data": "datasources[\"PH-90\"][\"green_runs\"]",
 						"height": 3
 					}
 				}
