@@ -24,8 +24,8 @@
   const ONE_DAY = ONE_HOUR * 24;
 
   const PHNames = [
-    'unconfigured',
-    'configured',
+    'no data',
+    'has data',
     'improving',
     'acceptable',
     'commendable',
@@ -67,8 +67,8 @@
 
       const data = this.state_.data;
 
-      const meetsGoingUp = (threshold) => data >= threshold;
-      const meetsGoingDown = (threshold) => data < threshold;
+      const meetsGoingUp = (threshold) => data != null && data >= threshold;
+      const meetsGoingDown = (threshold) => data != null && data < threshold;
       const meets = this.settings_.goingUp ? meetsGoingUp : meetsGoingDown;
 
       let level = 0;
