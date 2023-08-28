@@ -23,6 +23,7 @@ class WorkflowRun(object):
     self.duration = self.end_time - self.start_time
     self.artifacts_url = data["artifacts_url"]
     self.logs_url = data["logs_url"]
+    self.html_url = data["html_url"]  # URL in GitHub Actions web interface
 
     conclusion = data["conclusion"]
 
@@ -43,6 +44,7 @@ class WorkflowRun(object):
 
   def serializable(self):
     return {
+      "html_url": self.html_url,
       "trigger": self.trigger_time.timestamp(),
       "start": self.start_time.timestamp(),
       "duration": self.duration.total_seconds(),

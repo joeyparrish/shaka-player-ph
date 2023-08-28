@@ -5,7 +5,7 @@
  */
 
 (() => {
-  freeboard.addStyle('.test-runs', 'white-space: normal;');
+  freeboard.addStyle('.test-runs', 'white-space: normal; line-height: 1.5;');
 
   class TestRuns {
     constructor(settings) {
@@ -27,6 +27,7 @@
 
       for (const run of data) {
         const triggeredAt = (new Date(run.trigger * 1000)).toDateString();
+        const url = run.html_url;
 
         let status, dot;
         if (run.passed && run.flaky) {
@@ -41,7 +42,7 @@
         }
 
         this.containerElement_.append(
-          $(`<span title="${triggeredAt}: ${status}">${dot}</span>`));
+          $(`<a target="_blank" href="${url}" title="${triggeredAt}: ${status}">${dot}</a>`));
         this.containerElement_.append(' ');
       }
     }
