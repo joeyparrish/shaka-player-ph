@@ -8,7 +8,7 @@ from . import shell
 
 
 def _api_base(url_or_full_path, args, text):
-  args = ["gh", "api", "--cache", "10m", *args, url_or_full_path]
+  args = ["gh", "api", "--cache", "20m", *args, url_or_full_path]
   return shell.run_command(args, text=text)
 
 def api_raw(url_or_path):
