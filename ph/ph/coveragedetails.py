@@ -8,6 +8,9 @@ import re
 
 # TODO: Figure out how to get karma to output relative paths only.
 def _strip_git_dir(path):
+  # Convert Windows-style paths to Unix-style paths so we can read coverage
+  # data from Windows runners, too.
+  path = path.replace('\\', '/')
   # Strip the path to the git clone, leaving only the source path within the
   # repo.
   return re.sub(r'.*?/(lib|ui)/', r'\1/', path)
