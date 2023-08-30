@@ -20,6 +20,12 @@ A GitHub Actions workflow updates the metrics and deploys everything to GitHub
 Pages every morning.
 
 
+## Token scope
+
+The token used by the workflow requires `repo` scope to download workflow
+artifacts.
+
+
 [freeboard]: https://github.com/Freeboard/freeboard)
 [freeboard-jqplot]: https://github.com/jritsema/freeboard-jqplot
 [freeboard-ph]: https://github.com/joeyparrish/shaka-player-ph/blob/main/freeboard-ph/ph.js
