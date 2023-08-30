@@ -62,10 +62,11 @@ class WorkflowRun(object):
         try:
           zip_data = gh.api_raw(data["archive_download_url"])
           break
-        except RuntimeError:
+        except RuntimeError as e:
           print(
             'Failed to fetch artifact for run from {}'.format(self.start_time),
             file=sys.stderr)
+          print(e, file=sys.stderr)
 
     if zip_data is None:
       return None
