@@ -26,6 +26,6 @@ The token used by the workflow requires `repo` scope to download workflow
 artifacts.
 
 
-[freeboard]: https://github.com/Freeboard/freeboard)
+[freeboard]: https://github.com/Freeboard/freeboard
 [freeboard-jqplot]: https://github.com/jritsema/freeboard-jqplot
 [freeboard-ph]: https://github.com/joeyparrish/shaka-player-ph/blob/main/freeboard-ph/ph.js
