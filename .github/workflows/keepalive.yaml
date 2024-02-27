@@ -1,0 +1,35 @@
+# Cron job to keep cron jobs alive by committing to the repo.
+name: Keep-alive
+
+on:
+  # Runs at 9:15am UTC on the first of every month
+  schedule:
+    - cron: "15 9 1 * *"
+
+  # Can be runs manually, too
+  workflow_dispatch:
+
+# Allow only one concurrent run
+concurrency:
+  group: keepalive
+  cancel-in-progress: true
+
+jobs:
+  update-repo:
+    name: Update repo
+
+    permissions:
+      contents: write
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Push to repo
+        run: |
+          git config --global user.name "shaka-bot"
+          git config --global user.email "shaka-bot@users.noreply.github.com"
+          git commit --allow-empty -m "Monthly repo keep-alive commit"
+          git push
