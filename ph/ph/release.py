@@ -31,6 +31,10 @@ class Release(object):
     self.end_time = None
     self.num_commits = None
 
+    # NOTE: This is a computed branch name and it could be wrong.  We want to
+    # use these when possible, because we can cache results from the GitHub API
+    # when we load a commit log for the branch instead of for each individual
+    # release.
     version = _tag_to_version(self.name)
     branch = _version_to_tag(version[0:2] + ["x"])
     self.branch = branch
@@ -56,21 +60,37 @@ class Release(object):
       self.end_time = None
 
   def load_num_commits(self):
-    commit_logs = CommitLog.get_all(self.repo, self.branch, None)
+    try:
+      # First load from the computed branch name.  This is _almost_ always
+      # correct and we get cache benefits WRT the GitHub API when it is.
+      self._load_num_commits_internal(self.branch)
+    except RuntimeError as e:
+      # Fall back to the commit log from this exact tag.  This will always be a
+      # cache miss, but should also always be accurate.
+      self._load_num_commits_internal(self.name)
 
+  def _load_num_commits_internal(self, ref):
+    # Pull the commit log starting from this specific ref.  It could be a
+    # branch (more cacheable) or a tag (always accurate).
+    commit_logs = CommitLog.get_all(self.repo, ref, None)
+
+    # Index of the tag in the commit log (0 = most recent)
     tag_index = None
+    # Index of the next tag after this one in the commit log (before it in time)
     next_tag_index = None
-    index = 0
 
-    for log in commit_logs:
+    for index, log in enumerate(commit_logs):
+      # If we already found the release we wanted, and then we find another tag,
+      # note the index of this other tag.  The difference is the number of
+      # commits in this release.
       if tag_index is not None and len(log.tags) != 0:
         next_tag_index = index
         break
 
+      # If this is the tag we wanted (self.name == name of release), then note
+      # the index.
       if self.name in log.tags:
         tag_index = index
-
-      index += 1
 
     if tag_index is None:
       raise RuntimeError("Unable to find tag %s in branch %s" % (
