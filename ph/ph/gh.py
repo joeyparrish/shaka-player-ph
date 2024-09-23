@@ -2,36 +2,27 @@
 # Copyright 2023 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
-import os
 import json
 
 from . import diskcache
 from . import ratelimit
 from . import shell
 
-# Where to cache GH API responses.
-CACHE_FOLDER = os.path.join(os.environ["HOME"], ".cache", "shaka-player-ph")
 
-# How long to cache GH API responses.  Should be long enough that we never
-# request the same thing twice in a workflow run.
-CACHE_TIME_SECONDS = 2 * 3600  # 2h
+rate_limiter = None
+disk_cache = None
 
-# Rate limits for the GitHub API.  There is a limit of 5,000 requests per hour
-# for the whole user account.  We allow an initial burst that is what this tool
-# is allowed to "consume", then we implement strict rate limiting beyond that.
-# Once the burst is over, we will be calling at the rate limit, which is
-# effectively "consuming" nothing from the overall API limit.
-# This allows the credentialed account to do other things on other repos, too.
-GITHUB_API_BURST_ALLOWED = 2000
-GITHUB_API_RATE_LIMIT_PER_HOUR = 5000
 
-rate_limiter = ratelimit.RateLimit(
-    GITHUB_API_BURST_ALLOWED, GITHUB_API_RATE_LIMIT_PER_HOUR)
-
-disk_cache = diskcache.DiskCache(CACHE_FOLDER, CACHE_TIME_SECONDS)
-
+def configure(burst_limit, rate_limit_per_hour, cache_folder, cache_minutes):
+  global rate_limiter
+  global disk_cache
+  rate_limiter = ratelimit.RateLimit(burst_limit, rate_limit_per_hour)
+  disk_cache = diskcache.DiskCache(cache_folder, cache_minutes)
 
 def _api_base(url_or_full_path, is_text):
+  global rate_limiter
+  global disk_cache
+
   data = disk_cache.get(url_or_full_path)
   if data is not None:
     return data

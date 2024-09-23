@@ -7,6 +7,7 @@
 import argparse
 import datetime
 import json
+import os
 import time
 import sys
 
@@ -22,6 +23,8 @@ from ph.workflowrun import WorkflowRun
 
 
 def parse_args():
+  home = os.environ.get("HOME", "/")
+
   parser = argparse.ArgumentParser(
       description="Take project health (PH) measurements",
       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -30,6 +33,27 @@ def parse_args():
   parser.add_argument(
       "--repo", "-r", help="GitHub repo name",
       default="shaka-project/shaka-player")
+  parser.add_argument(
+      "--rate-limit",
+      help="GitHub API rate limit (calls/hour). Defaults to the rate limit for"
+           " personal accounts. At this rate, we will not \"consume\" any"
+           " of the available requests for the credentialed account.",
+      default=5000)
+  parser.add_argument(
+      "--burst-limit",
+      help="GitHub API burst limit (calls). The tool is allowed to make this"
+           " many requests without regard for the rate limit. This is the"
+           " number of requests the tool will \"consume\" of those available"
+           " to the credentialed account.",
+      default=2000)
+  parser.add_argument(
+      "--cache-folder", help="Where to cache GitHub API responses",
+      default=os.path.join(home, ".cache", "shaka-player-ph"))
+  parser.add_argument(
+      "--cache-minutes",
+      help="How long to cache GitHub API responses. Should be long enough that"
+           " we never request the same thing twice in a workflow run.",
+      default=120)
   parser.add_argument(
       "--green-workflow", "-gw",
       help="GitHub Actions workflow (filename or filename:event)"
@@ -58,6 +82,9 @@ def parse_args():
 
 class CollectData(object):
   def __init__(self, args):
+    gh.configure(args.burst_limit, args.rate_limit,
+                 args.cache_folder, args.cache_minutes)
+
     now = datetime.datetime.now(datetime.timezone.utc)
     time_range = datetime.timedelta(days=args.days)
     range_start = now - time_range
