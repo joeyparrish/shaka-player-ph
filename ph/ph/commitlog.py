@@ -2,6 +2,8 @@
 # Copyright 2023 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
+import functools
+
 from . import shell
 
 class CommitLog(object):
@@ -10,6 +12,7 @@ class CommitLog(object):
     self.tags = tags
 
   @staticmethod
+  @functools.lru_cache
   def get_all(repo, branch, range_start):
     args = ["git", "fetch", "--tags", "https://github.com/%s" % repo, branch]
     shell.run_command(args)
