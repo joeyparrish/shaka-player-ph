@@ -76,6 +76,9 @@ def parse_args():
       default="build-and-test.yaml:pull_request")
   parser.add_argument(
       "--json", "-j", action="store_true", help="Output in JSON", default=False)
+  parser.add_argument(
+      "--debug", action="store_true", help="Output debug logs to stderr",
+      default=False)
 
   return parser.parse_args()
 
@@ -83,7 +86,8 @@ def parse_args():
 class CollectData(object):
   def __init__(self, args):
     gh.configure(args.burst_limit, args.rate_limit,
-                 args.cache_folder, args.cache_minutes)
+                 args.cache_folder, args.cache_minutes,
+                 args.debug)
 
     now = datetime.datetime.now(datetime.timezone.utc)
     time_range = datetime.timedelta(days=args.days)

@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import json
+import sys
 
 from . import diskcache
 from . import ratelimit
@@ -11,26 +12,38 @@ from . import shell
 
 rate_limiter = None
 disk_cache = None
+debug_api = False
 
 
-def configure(burst_limit, rate_limit_per_hour, cache_folder, cache_minutes):
+def configure(burst_limit, rate_limit_per_hour, cache_folder, cache_minutes,
+              debug):
   global rate_limiter
   global disk_cache
+  global debug_api
+
   rate_limiter = ratelimit.RateLimit(burst_limit, rate_limit_per_hour)
   disk_cache = diskcache.DiskCache(cache_folder, cache_minutes)
+  debug_api = debug
 
 def _api_base(url_or_full_path, is_text):
   global rate_limiter
   global disk_cache
+  global debug_api
 
   data = disk_cache.get(url_or_full_path)
+
+  if debug_api:
+    if data is None:
+      print("CACHE MISS: {}".format(url_or_full_path), file=sys.stderr)
+    else:
+      print("CACHE HIT: {}".format(url_or_full_path), file=sys.stderr)
+
   if data is not None:
     return data
 
   rate_limiter.wait()
   args = ["gh", "api", url_or_full_path]
   data = shell.run_command(args, text=is_text)
-
   disk_cache.store(url_or_full_path, data)
 
   return data
