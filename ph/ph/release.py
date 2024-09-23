@@ -113,7 +113,19 @@ class Release(object):
 
   @staticmethod
   def get_all(repo, range_start):
-    results = gh.api_multiple("/repos/%s/releases" % repo)
+    # Stop paging results in when we see releases published earlier than
+    # range_start.
+    def stop_predicate(results):
+      for item in results[::-1]:
+        if item["published_at"] is not None:
+          release_date = dateutil.parser.parse(item["published_at"])
+          return release_date <= range_start
+
+    results = gh.api_multiple("/repos/%s/releases" % repo, subkey=None,
+                              stop_predicate=stop_predicate)
+
+    # This filter is more fine-grained, and will remove results that are too
+    # old, but came in a page with results we needed.
     return base.load_and_filter_by_time(
         results,
         constructor=lambda data: Release(repo, data),

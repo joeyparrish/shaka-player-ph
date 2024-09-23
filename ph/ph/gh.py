@@ -5,9 +5,9 @@
 import json
 import sys
 
-from . import diskcache
-from . import ratelimit
 from . import shell
+from .diskcache import DiskCache
+from .ratelimit import RateLimit
 
 
 rate_limiter = None
@@ -21,9 +21,10 @@ def configure(burst_limit, rate_limit_per_hour, cache_folder, cache_minutes,
   global disk_cache
   global debug_api
 
-  rate_limiter = ratelimit.RateLimit(burst_limit, rate_limit_per_hour)
-  disk_cache = diskcache.DiskCache(cache_folder, cache_minutes)
+  rate_limiter = RateLimit(burst_limit, rate_limit_per_hour)
+  disk_cache = DiskCache(cache_folder, cache_minutes)
   debug_api = debug
+
 
 def _api_base(url_or_full_path, is_text):
   global rate_limiter
@@ -48,6 +49,7 @@ def _api_base(url_or_full_path, is_text):
 
   return data
 
+
 def api_raw(url_or_path):
   return _api_base(url_or_path, is_text=False)
 
@@ -55,7 +57,7 @@ def api_single(url_or_path):
   output = _api_base(url_or_path, is_text=True)
   return json.loads(output)
 
-def api_multiple(url_or_path, subkey=None):
+def api_multiple(url_or_path, subkey=None, stop_predicate=None):
   # Handle pagination explicitly at our level instead of letting the CLI do it,
   # so we can manage paging with respect to API rate limits.  We also
   # explicitly set a page size of 100 (maximum) to reduce the number of calls
@@ -80,6 +82,8 @@ def api_multiple(url_or_path, subkey=None):
       break
 
     results.extend(next_page)
+    if stop_predicate is not None and stop_predicate(results):
+      break
     page_number += 1
 
   return results

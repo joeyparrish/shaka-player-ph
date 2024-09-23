@@ -124,6 +124,12 @@ class PullRequest(object):
 
   @staticmethod
   def get_all_merged(repo, range_start):
+    # NOTE: We can't use a predicate here to stop paging early.  We have to
+    # pull in all PRs.  This is because GH won't sort our PRs by when they are
+    # merged, and stopping early only works if the items are in order of the
+    # thing you care about.  (Current options as of September 2024 are:
+    # created, updated, popularity, long-running.)
+    # See: https://docs.github.com/en/rest/pulls/pulls#list-pull-requests
     results = gh.api_multiple("/repos/%s/pulls?state=closed" % repo)
 
     return base.load_and_filter_by_time(
