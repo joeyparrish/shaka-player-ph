@@ -7,6 +7,8 @@
 import argparse
 import datetime
 import json
+import time
+import sys
 
 from ph import gh
 from ph import formatters
@@ -173,6 +175,11 @@ def main():
     print_json(args, data)
   else:
     print_text_tables(args, data)
+
+  num_calls = gh.rate_limiter.num_calls
+  minutes = (time.time() - gh.rate_limiter.first_call_time) / 60
+  print("Made {} GH API calls over {:.1f} minutes.".format(num_calls, minutes),
+        file=sys.stderr)
 
 
 if __name__ == "__main__":
