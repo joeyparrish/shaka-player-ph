@@ -11,12 +11,17 @@ from . import shell
 # we never request the same thing twice in a workflow run.
 CACHE_TIME = "12h"
 
-# Rate limit for the GitHub API.  There is a limit of 5,000 requests per hour
-# for the whole user account.  We don't want to use up all of them, since the
-# account does other things on other repos, too.
-MAX_REQUESTS_PER_HOUR = 3000
+# Rate limits for the GitHub API.  There is a limit of 5,000 requests per hour
+# for the whole user account.  We allow an initial burst that is what this tool
+# is allowed to "consume", then we implement strict rate limiting beyond that.
+# Once the burst is over, we will be calling at the rate limit, which is
+# effectively "consuming" nothing from the overall API limit.
+# This allows the credentialed account to do other things on other repos, too.
+GITHUB_API_BURST_ALLOWED = 2000
+GITHUB_API_RATE_LIMIT_PER_HOUR = 5000
 
-rate_limiter = ratelimit.RateLimit(MAX_REQUESTS_PER_HOUR)
+rate_limiter = ratelimit.RateLimit(
+    GITHUB_API_BURST_ALLOWED, GITHUB_API_RATE_LIMIT_PER_HOUR)
 
 
 def _api_base(url_or_full_path, text):

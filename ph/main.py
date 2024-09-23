@@ -177,7 +177,7 @@ def main():
     print_text_tables(args, data)
 
   num_calls = gh.rate_limiter.num_calls
-  minutes = (time.time() - gh.rate_limiter.first_call_time) / 60
+  minutes = (time.time() - gh.rate_limiter.start_time) / 60
   print("Made {} GH API calls over {:.1f} minutes.".format(num_calls, minutes),
         file=sys.stderr)
 
