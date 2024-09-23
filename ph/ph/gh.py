@@ -2,14 +2,19 @@
 # Copyright 2023 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
+import os
 import json
 
+from . import diskcache
 from . import ratelimit
 from . import shell
 
-# Suffixes "h", "m", "s", etc.  Passed to GH CLI.  Should be long enough that
-# we never request the same thing twice in a workflow run.
-CACHE_TIME = "12h"
+# Where to cache GH API responses.
+CACHE_FOLDER = os.path.join(os.environ["HOME"], ".cache", "shaka-player-ph")
+
+# How long to cache GH API responses.  Should be long enough that we never
+# request the same thing twice in a workflow run.
+CACHE_TIME_SECONDS = 2 * 3600  # 2h
 
 # Rate limits for the GitHub API.  There is a limit of 5,000 requests per hour
 # for the whole user account.  We allow an initial burst that is what this tool
@@ -23,17 +28,27 @@ GITHUB_API_RATE_LIMIT_PER_HOUR = 5000
 rate_limiter = ratelimit.RateLimit(
     GITHUB_API_BURST_ALLOWED, GITHUB_API_RATE_LIMIT_PER_HOUR)
 
+disk_cache = diskcache.DiskCache(CACHE_FOLDER, CACHE_TIME_SECONDS)
 
-def _api_base(url_or_full_path, text):
+
+def _api_base(url_or_full_path, is_text):
+  data = disk_cache.get(url_or_full_path)
+  if data is not None:
+    return data
+
   rate_limiter.wait()
-  args = ["gh", "api", "--cache", CACHE_TIME, url_or_full_path]
-  return shell.run_command(args, text=text)
+  args = ["gh", "api", url_or_full_path]
+  data = shell.run_command(args, text=is_text)
+
+  disk_cache.store(url_or_full_path, data)
+
+  return data
 
 def api_raw(url_or_path):
-  return _api_base(url_or_path, text=False)
+  return _api_base(url_or_path, is_text=False)
 
 def api_single(url_or_path):
-  output = _api_base(url_or_path, text=True)
+  output = _api_base(url_or_path, is_text=True)
   return json.loads(output)
 
 def api_multiple(url_or_path, subkey=None):
@@ -41,16 +56,16 @@ def api_multiple(url_or_path, subkey=None):
   # so we can manage paging with respect to API rate limits.  We also
   # explicitly set a page size of 100 (maximum) to reduce the number of calls
   # compared to the default (30).
-  if '?' in url_or_path:
-    url_or_path += '&page_size=100'
+  if "?" in url_or_path:
+    url_or_path += "&page_size=100"
   else:
-    url_or_path += '?page_size=100'
+    url_or_path += "?page_size=100"
 
   page_number = 1  # Page numbers start at 1, not 0.
   results = []
   while True:
-    next_page_url = url_or_path + '&page={}'.format(page_number)
-    output = _api_base(next_page_url, text=True)
+    next_page_url = url_or_path + "&page={}".format(page_number)
+    output = _api_base(next_page_url, is_text=True)
 
     next_page = json.loads(output)
     if subkey is not None:
