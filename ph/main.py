@@ -199,18 +199,20 @@ def print_text_tables(args, data):
 
 
 def main():
-  args = parse_args()
-  data = CollectData(args)
+  try:
+    args = parse_args()
+    data = CollectData(args)
 
-  if args.json:
-    print_json(args, data)
-  else:
-    print_text_tables(args, data)
-
-  num_calls = gh.rate_limiter.num_calls
-  minutes = (time.time() - gh.rate_limiter.start_time) / 60
-  print("Made {} GH API calls over {:.1f} minutes.".format(num_calls, minutes),
-        file=sys.stderr)
+    if args.json:
+      print_json(args, data)
+    else:
+      print_text_tables(args, data)
+  finally:
+    if gh.rate_limiter is not None:
+      num_calls = gh.rate_limiter.num_calls
+      minutes = (time.time() - gh.rate_limiter.start_time) / 60
+      print("Made {} GH API calls over {:.1f} minutes.".format(
+            num_calls, minutes), file=sys.stderr)
 
 
 if __name__ == "__main__":
