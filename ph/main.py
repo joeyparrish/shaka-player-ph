@@ -35,17 +35,17 @@ def parse_args():
       default="shaka-project/shaka-player")
   parser.add_argument(
       "--rate-limit",
-      help="GitHub API rate limit (calls/hour). Defaults to the rate limit for"
-           " personal accounts. At this rate, we will not \"consume\" any"
+      help="GitHub API rate limit (calls/hour). The rate limit for personal"
+           " accounts is 5,000. At that rate, we should not \"consume\" any"
            " of the available requests for the credentialed account.",
-      default=5000)
+      default=4000)
   parser.add_argument(
       "--burst-limit",
       help="GitHub API burst limit (calls). The tool is allowed to make this"
            " many requests without regard for the rate limit. This is the"
            " number of requests the tool will \"consume\" of those available"
            " to the credentialed account.",
-      default=2000)
+      default=1500)
   parser.add_argument(
       "--cache-folder", help="Where to cache GitHub API responses",
       default=os.path.join(home, ".cache", "shaka-player-ph"))
