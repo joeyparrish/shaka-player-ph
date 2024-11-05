@@ -24,7 +24,7 @@ permissions:
 # Allow only one concurrent deployment.  However, do NOT cancel in-progress
 # runs.  Let deployments complete.
 concurrency:
-  group: "pages"
+  group: pages
   cancel-in-progress: false
 
 
