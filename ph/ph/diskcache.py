@@ -15,10 +15,7 @@ class DiskCache(object):
   def __init__(self, cache_folder, expiration_minutes):
     self.cache_folder = cache_folder
     self.expiration_minutes = expiration_minutes
-
-    if not os.path.exists(self.cache_folder):
-      os.mkdir(self.cache_folder, mode=0o755)
-
+    os.makedirs(self.cache_folder, mode=0o755, exist_ok=True)
     self._prune_cache()
 
   def _prune_cache(self):
