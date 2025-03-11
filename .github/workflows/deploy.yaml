@@ -6,9 +6,9 @@ on:
   push:
     branches: ["main"]
 
-  # Runs every morning at 5am PST / 1pm UTC
+  # Runs every morning at 7am PST / 3pm UTC
   schedule:
-    - cron: "0 13 * * *"
+    - cron: "0 15 * * *"
 
   # Can be runs manually, too
   workflow_dispatch:
