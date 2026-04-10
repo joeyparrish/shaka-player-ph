@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import dateutil.parser
-import requests
 
 from . import base
 from . import gh
@@ -52,8 +51,8 @@ class Release(object):
   def load_end_time(self):
     bare_version = self.name.replace("v", "")
     url = CDN_URL_TEMPLATE % bare_version
-    response = requests.get(url)
-    last_modified = response.headers.get("last-modified")
+    headers = gh.http_head(url)
+    last_modified = headers.get("Last-Modified") or headers.get("last-modified")
     if last_modified is not None:
       self.end_time = dateutil.parser.parse(last_modified)
     else:
