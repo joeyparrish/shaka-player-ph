@@ -49,10 +49,24 @@ jobs:
       - name: Install Python requirements
         run: pip install -r ph/requirements.txt
 
+      - name: Restore PH cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/shaka-player-ph
+          key: ph-cache-${{ github.run_id }}
+          restore-keys: ph-cache-
+
       - name: Update metrics
         run: ./ph/update-all.sh
         env:
           GH_TOKEN: ${{ secrets.PH_GITHUB_TOKEN }}
+
+      - name: Save PH cache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: ~/.cache/shaka-player-ph
+          key: ph-cache-${{ github.run_id }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
