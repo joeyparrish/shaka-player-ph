@@ -57,28 +57,58 @@ Post-change measurements use the same method (cold cache).
 
 ## Step 1: Baseline (Completed)
 
-Two cold CI runs measured:
+Two cold CI runs and one local cold+warm pair measured:
+
+**CI cold runs (two runs, averaged):**
 
 | Period | API calls | Wall time |
 |--------|-----------|-----------|
 | 90d    | ~3395     | ~28.5 min |
-| 30d    | 19        | ~1.9 min  |
+| 30d    | ~19       | ~1.9 min  |
 | 7d     | 7         | ~0.5 min  |
 
-30d + 7d together = 26 calls = 0.76% of the 90d cost. Well below the 25%
-threshold. **Approach A is skipped.**
+**Local cold run:**
 
-The 1.9-minute wall time for the 30d run despite only 19 API calls points to
-CDN requests (`requests.get()` fetching full binaries per release, uncached)
-as the bottleneck -- not rate limiting. Step 3 addresses this directly.
+| Period | API calls | Wall time | User time |
+|--------|-----------|-----------|-----------|
+| 90d    | 3404      | 33.4 min  | 11.7 min  |
+| 30d    | 18        | 2.2 min   | 1.9 min   |
+| 7d     | 7         | 0.6 min   | 0.5 min   |
+
+**Local warm run (immediately after cold):**
+
+| Period | API calls | Wall time | User time |
+|--------|-----------|-----------|-----------|
+| 90d    | 44        | 6.0 min   | 5.2 min   |
+| 30d    | 18        | 2.2 min   | 1.9 min   |
+| 7d     | 7         | 0.6 min   | 0.5 min   |
+
+**Key observations:**
+
+- The warm 90d run is the target state: after long-TTL caching + CI
+  persistence, every daily CI run will look like this. 33 min → 6 min is a
+  5.6x improvement achievable with no changes to collection logic.
+- The 44 warm API calls are almost certainly workflow run listing pages (date
+  string baked into URL = cache miss every run). At ~400ms each, ~18 seconds --
+  not the bottleneck.
+- Warm 90d wall time (6:00) ≈ user time (5:10): almost entirely CPU-bound.
+  Processing cached ZIPs (ZipFile extraction + CoverageDetails set operations)
+  dominates. Step 4 (ZIP optimization) targets this.
+- 30d and 7d times are **identical warm vs cold**. The cache makes no
+  difference for these periods -- their bottleneck is CDN requests
+  (`requests.get()` fetching full binaries, uncached, not counted in API calls)
+  and processing. Step 3a addresses this directly.
+
+30d + 7d together = 25 API calls = 0.73% of the 90d cost. Well below the 25%
+threshold. **Approach A is skipped.**
 
 ---
 
 ## Step 2: Approach A (Skipped)
 
 The existing cache already makes 30d and 7d runs nearly free in API terms.
-After Step 3, CDN caching will also reduce the 30d/7d wall-clock cost. The
-remaining overhead (two extra Python process launches + disk reads) is not
+After Step 3, CDN caching will reduce the 30d/7d wall-clock cost. The
+remaining overhead (two extra Python process launches + processing) is not
 worth the structural complexity of single-process multi-period.
 
 **Revisit only if:** post-Step-3 measurements show 30d + 7d still accounting
