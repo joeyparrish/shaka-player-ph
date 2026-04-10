@@ -158,31 +158,15 @@ single run object. These are the right target.
   (`/commits/[0-9a-f]{40}`)
 - Store with long TTL unconditionally
 
-### 3d. Artifact Content
+### 3d. Artifact Listings
 
-Currently `fetch_artifact()` caches the full ZIP via `gh.api_raw()`, but even
-on a cache hit it reads the ZIP bytes from disk, wraps them in `BytesIO`, opens
-a `ZipFile`, and extracts the target file. The decompression happens on every
-access, cached or not.
+The artifact listing (`/actions/runs/{id}/artifacts`) is final once a run
+completes -- no new artifacts can be added to a finished run. This listing is
+fetched via `gh.api_multiple()` inside `fetch_artifact()` and currently gets
+the default 120-minute TTL.
 
-Instead, cache the extracted file bytes directly:
-
-- Download the ZIP (without caching it), extract the needed file, cache the
-  extracted bytes, discard the ZIP
-- Cache key: `archive_download_url + "#" + filename` (stable; archive URL
-  contains the artifact ID)
-- Store with long TTL unconditionally
-- Cache hits become a plain disk read with no decompression
-
-Trade-off: extracted JSON is uncompressed, so entries are larger than the ZIP
-(JSON compresses ~5-10x; `coverage-details.json` may be 2-5 MB uncompressed vs
-200-500 KB zipped). Acceptable given the 100-day TTL and bounded query window.
-
-The artifact listing (`/actions/runs/{id}/artifacts`) is also final once a run
-completes -- no new artifacts can be added. The listing URL should therefore
-use the long TTL when the parent run has a non-null `conclusion`, consistent
-with 3b. In practice this listing is fetched via `gh.api_multiple()` inside
-`fetch_artifact()`; the long-TTL logic there should mirror 3b.
+- Store artifact listings with long TTL when the parent run has a non-null
+  `conclusion`, consistent with 3b
 
 ### 3e. CommitLog Data
 
@@ -243,7 +227,33 @@ long-TTL entries age out naturally.
 
 ---
 
-## Step 4: Rate Limit Awareness at Startup
+## Step 4: Artifact ZIP Optimization
+
+Measure after Step 3. Currently `fetch_artifact()` caches the full ZIP via
+`gh.api_raw()`, but even on a cache hit it reads the ZIP bytes from disk,
+wraps them in `BytesIO`, opens a `ZipFile`, and extracts the target file.
+Decompression happens on every access, cached or not.
+
+Instead, cache the extracted file bytes directly:
+
+- Skip caching the ZIP itself; download it, extract the needed file, cache
+  the extracted bytes, discard the ZIP
+- Cache key: `archive_download_url + "#" + filename` (stable; archive URL
+  contains the artifact ID)
+- Store with long TTL unconditionally
+- Cache hits become a plain disk read with no decompression
+
+Trade-off: extracted JSON is uncompressed, so entries may be larger than the
+ZIP (JSON compresses ~5-10x; `coverage-details.json` may be 2-5 MB
+uncompressed vs 200-500 KB zipped). Acceptable given the 100-day TTL and
+bounded query window.
+
+Measure cold-cache wall time before and after to isolate the improvement from
+eliminating repeated decompression.
+
+---
+
+## Step 5: Rate Limit Awareness at Startup
 
 `RateLimit.__init__` currently ignores how much quota has already been consumed
 by prior processes using the same token. This caused a local run to fail after
@@ -267,13 +277,13 @@ the run may be slow.
 
 Note: `gh api rate_limit` does not itself consume quota.
 
-This step can be implemented independently of Steps 3 and 5.
+This step can be implemented independently of Steps 3, 4, and 6.
 
 ---
 
-## Step 5: Decision Point -- Approach B (Parallel I/O)
+## Step 6: Decision Point -- Approach B (Parallel I/O)
 
-Re-measure after Step 3. If wall-clock time is still a pain point:
+Re-measure after Steps 3 and 4. If wall-clock time is still a pain point:
 
 - Use `ThreadPoolExecutor` to parallelize CDN HEAD requests (one per release,
   currently serial)
@@ -282,11 +292,15 @@ Re-measure after Step 3. If wall-clock time is still a pain point:
 - The rate limiter (`RateLimit`) will need a threading lock around `num_calls`
   and `start_time` access
 
-**Do Approach B if:** wall-clock time has not improved enough after Step 3 (now Step 3f).
+**Do Approach B if:** wall-clock time has not improved enough after Steps 3 and 4.
 
 ---
 
 ## File Change Summary
+
+| File | Change |
+|---|---|
+**Step 3 (Long-TTL Caching):**
 
 | File | Change |
 |---|---|
@@ -295,5 +309,18 @@ Re-measure after Step 3. If wall-clock time is still a pain point:
 | `ph/release.py` | Use `gh.http_head()` instead of `requests.get()` |
 | `ph/commitlog.py` | Add disk cache calls; long TTL for tag refs, default TTL for branch refs |
 | `.github/workflows/deploy.yaml` | Add `actions/cache` restore/save around "Update metrics" step |
-| `CLAUDE.md` | Update after each step to reflect architectural changes |
-| `ph/ratelimit.py` | Query `/rate_limit` at startup; clamp burst to `remaining - 1000`; threading lock (if Approach B) |
+| `CLAUDE.md` | Update to reflect caching architecture changes |
+
+**Step 4 (ZIP Optimization):**
+
+| File | Change |
+|---|---|
+| `ph/workflowrun.py` | Cache extracted file bytes instead of ZIPs in `fetch_artifact()` |
+| `CLAUDE.md` | Update to reflect artifact caching change |
+
+**Step 5 (Rate Limit Awareness):**
+
+| File | Change |
+|---|---|
+| `ph/ratelimit.py` | Query `/rate_limit` at startup; clamp burst to `remaining - 1000`; threading lock (if Step 6) |
+| `CLAUDE.md` | Update to reflect rate limit behavior change |
