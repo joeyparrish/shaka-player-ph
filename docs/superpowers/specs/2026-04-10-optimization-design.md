@@ -104,6 +104,45 @@ threshold. **Approach A is skipped.**
 
 ---
 
+## Step 3: Post-Implementation Measurement (Completed)
+
+Local cold + warm run after Step 3 (long-TTL caching) and Step 3f (CI cache
+persistence) were implemented:
+
+**Local cold run:**
+
+| Period | API calls | Wall time | User time |
+|--------|-----------|-----------|-----------|
+| 90d    | 3404      | 31.2 min  | 11.7 min  |
+| 30d    | 18        | 2.2 min   | 1.9 min   |
+| 7d     | 7         | 0.6 min   | 0.5 min   |
+
+**Local warm run (immediately after cold):**
+
+| Period | API calls | Wall time | User time |
+|--------|-----------|-----------|-----------|
+| 90d    | 44        | 5.9 min   | 5.1 min   |
+| 30d    | 18        | 2.2 min   | 1.9 min   |
+| 7d     | 7         | 0.6 min   | 0.5 min   |
+
+**Key observations:**
+
+- Cold 90d wall time improved slightly (31.2 vs 33.4 min, -6.6%) -- probably
+  from `http_head()` being faster than `requests.get()` for release CDN calls.
+  Just below the 10% threshold on its own.
+- 30d and 7d are unchanged -- these were always CPU-bound (user time ≈ wall
+  time). CDN GET-vs-HEAD made no measurable difference; I/O was never the
+  bottleneck for those periods. Step 3a's hypothesis was incorrect.
+- API call counts unchanged -- as expected; long-TTL entries only help on
+  second and subsequent runs.
+- The primary benefit of Step 3 is CI persistence: daily CI runs will look
+  like the warm run (6 min) instead of cold (31 min). This can't be confirmed
+  until CI runs after the first cache-priming run.
+- Warm 90d is still 5.9 min (user 5.1 min): CPU-bound ZIP decompression
+  dominates. Step 4 targets this.
+
+---
+
 ## Step 2: Approach A (Skipped)
 
 The existing cache already makes 30d and 7d runs nearly free in API terms.
