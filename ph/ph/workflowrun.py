@@ -54,28 +54,42 @@ class WorkflowRun(object):
     }
 
   def fetch_artifact(self, name, filename):
-    results = gh.api_multiple(self.artifacts_url, "artifacts")
+    # Use long TTL for artifact listings: completed runs don't gain new artifacts.
+    results = gh.api_multiple(self.artifacts_url, "artifacts",
+                              ttl_minutes=gh.LONG_TTL_MINUTES)
 
-    zip_data = None
     for data in results:
       if data["name"] == name:
+        archive_url = data["archive_download_url"]
+        cache_key = archive_url + "#" + filename
+
+        cached = gh.disk_cache.get(cache_key)
+        if cached is not None:
+          return cached
+
         try:
-          zip_data = gh.api_raw(data["archive_download_url"])
-          break
+          zip_data = gh.api_raw(archive_url)
         except RuntimeError as e:
           print(
             'Failed to fetch artifact for run from {}'.format(self.start_time),
             file=sys.stderr)
           print(e, file=sys.stderr)
+          return None
 
-    if zip_data is None:
-      return None
+        if zip_data is None:
+          return None
 
-    with zipfile.ZipFile(io.BytesIO(zip_data), 'r') as f:
-      try:
-        return f.read(filename)
-      except KeyError as e:
-        return None
+        with zipfile.ZipFile(io.BytesIO(zip_data), 'r') as f:
+          try:
+            file_bytes = f.read(filename)
+          except KeyError:
+            return None
+
+        gh.disk_cache.store(cache_key, file_bytes,
+                            ttl_minutes=gh.LONG_TTL_MINUTES)
+        return file_bytes
+
+    return None
 
   def fetch_logs(self, pattern):
     try:
