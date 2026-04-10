@@ -296,29 +296,42 @@ long-TTL entries age out naturally.
 
 ---
 
-## Step 4: Artifact ZIP Optimization
+## Step 4: Artifact ZIP Optimization (Attempted, Reverted)
 
-Measure after Step 3. Currently `fetch_artifact()` caches the full ZIP via
-`gh.api_raw()`, but even on a cache hit it reads the ZIP bytes from disk,
-wraps them in `BytesIO`, opens a `ZipFile`, and extracts the target file.
-Decompression happens on every access, cached or not.
+Implemented and measured. **Reverted -- does not meet the 10% threshold.**
 
-Instead, cache the extracted file bytes directly:
+**What was tried:**
+- v1: Cache extracted file bytes directly (long TTL); skip caching the ZIP.
+  Cache size: 3.2 GB (extracted JSON uncompressed, base64-encoded).
+- v2: Same, but store as UTF-8 text (no base64) and skip ZIP caching entirely.
+  Cache size: 2.5 GB.
 
-- Skip caching the ZIP itself; download it, extract the needed file, cache
-  the extracted bytes, discard the ZIP
-- Cache key: `archive_download_url + "#" + filename` (stable; archive URL
-  contains the artifact ID)
-- Store with long TTL unconditionally
-- Cache hits become a plain disk read with no decompression
+**Measurements (warm 90d, baseline 5m56s):**
+- v1 hot: 5m55s (-0.2%) -- no improvement
+- v2 hot: 6m04s (+1.4%) -- slightly slower (noise)
 
-Trade-off: extracted JSON is uncompressed, so entries may be larger than the
-ZIP (JSON compresses ~5-10x; `coverage-details.json` may be 2-5 MB
-uncompressed vs 200-500 KB zipped). Acceptable given the 100-day TTL and
-bounded query window.
+**Root cause finding:** Disabled all coverage processing in `main.py` and
+re-ran warm:
 
-Measure cold-cache wall time before and after to isolate the improvement from
-eliminating repeated decompression.
+| | With coverage | Without | Coverage share |
+|---|---|---|---|
+| 90d | 6m04s | 0m57s | ~84% |
+| 30d | 2m17s | 0m28s | ~80% |
+| 7d | 0m43s | 0m16s | ~63% |
+
+Coverage processing is pure CPU (user ≈ wall time), dominated by
+`CoverageDetails` JSON parsing and set operations -- roughly 3-4 seconds per
+coverage run. Caching raw bytes (Step 4) was the wrong abstraction level:
+the bottleneck is downstream of the bytes, in Python parsing and set work.
+
+**Future optimization target:** Cache the *output* of coverage computation
+(e.g. `CoverageSummary.line_coverage`, or serialized `CoverageDetails`) so
+parsing and set operations are done once per run and reused across invocations.
+This would require a new serialization format for coverage objects and a
+higher-level cache key (e.g. `"coverage:{run_id}:{filename}"`).
+
+Step 4 also produced a 2.5 GB cache, which would consume 25% of the 10 GB
+GitHub Actions per-repo cache budget with no performance benefit.
 
 ---
 
