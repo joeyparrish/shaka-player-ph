@@ -35,16 +35,18 @@ def parse_args():
       default="shaka-project/shaka-player")
   parser.add_argument(
       "--rate-limit",
-      help="GitHub API rate limit (calls/hour). The rate limit for personal"
-           " accounts is 5,000. At that rate, we should not \"consume\" any"
-           " of the available requests for the credentialed account.",
+      help="Self-imposed sustained rate limit (calls/hour) after the burst"
+           " budget is consumed. GitHub's actual limit is 5,000 calls/hour"
+           " for personal tokens, shared across all apps using that token."
+           " This lower value preserves quota for other tools.",
       default=4000)
   parser.add_argument(
       "--burst-limit",
-      help="GitHub API burst limit (calls). The tool is allowed to make this"
-           " many requests without regard for the rate limit. This is the"
-           " number of requests the tool will \"consume\" of those available"
-           " to the credentialed account.",
+      help="How many of the remaining API quota calls this run may consume"
+           " quickly (without per-call throttling). At startup the actual"
+           " remaining quota is queried and this is clamped to"
+           " max(0, remaining - 1000) to leave headroom for other tools."
+           " After the burst budget is spent, --rate-limit throttling applies.",
       default=1500)
   parser.add_argument(
       "--cache-folder", help="Where to cache GitHub API responses",
