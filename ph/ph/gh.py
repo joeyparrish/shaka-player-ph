@@ -20,6 +20,14 @@ disk_cache = None
 debug_api = False
 
 
+def get_rate_limit_remaining():
+  """Query actual remaining GitHub API quota. Does not consume quota."""
+  raw = shell.run_command(["gh", "api", "/rate_limit"], text=True)
+  data = json.loads(raw)
+  core = data["resources"]["core"]
+  return core["remaining"], core["reset"]
+
+
 def configure(burst_limit, rate_limit_per_hour, cache_folder, cache_minutes,
               debug):
   global rate_limiter

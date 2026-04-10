@@ -85,7 +85,17 @@ def parse_args():
 
 class CollectData(object):
   def __init__(self, args):
-    gh.configure(args.burst_limit, args.rate_limit,
+    remaining, reset_epoch = gh.get_rate_limit_remaining()
+    clamped_burst = max(0, min(args.burst_limit, remaining - 1000))
+    if clamped_burst < args.burst_limit:
+      reset_time = datetime.datetime.fromtimestamp(reset_epoch)
+      print(
+        "Warning: only {} API calls remaining (limit resets at {}). "
+        "Burst limit clamped from {} to {}.".format(
+            remaining, reset_time, args.burst_limit, clamped_burst),
+        file=sys.stderr)
+
+    gh.configure(clamped_burst, args.rate_limit,
                  args.cache_folder, args.cache_minutes,
                  args.debug)
 
