@@ -34,9 +34,10 @@ ph/ph/formatters.py     -- Human-readable output formatting
   completed workflow run metadata, PR commit data (SHA-keyed URLs), and
   CommitLog data for tag refs. Backward-compatible with old entries lacking
   `expires_at`. Key stored in each entry for collision detection.
-- **Rate limiter**: at startup, queries `/rate_limit` and clamps burst to
-  `max(0, remaining - 1000)` to avoid over-committing shared quota. Warns
-  to stderr if clamped. Sustained rate: 4000 calls/hour.
+- **Rate limiter**: configurable burst (`--burst-limit`, default 1500) then
+  sustained at `--rate-limit` calls/hour (default 4000). At startup, queries
+  `/rate_limit` and clamps burst to `max(0, remaining - 1000)` to avoid
+  over-committing shared quota. Warns to stderr if clamped.
 - **`WorkflowRun.get_all()`** and **`CommitLog.get_all()`** use
   `@functools.lru_cache` -- within a single process, duplicate calls are free.
 - **`green_workflow` and `coverage_workflow`** both default to
