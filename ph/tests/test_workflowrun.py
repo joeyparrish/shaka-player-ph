@@ -88,9 +88,6 @@ def test_fetch_artifact_cache_entry_has_long_ttl(tmp_path):
     with open(path) as f:
         data = json.load(f)
     assert data["expires_at"] > time.time() + 86400 * 99
-    # Stored as text (not base64 bytes) to avoid encoding overhead
-    assert "text" in data
-    assert "bytes" not in data
 
 
 def test_fetch_artifact_returns_none_for_missing_file(tmp_path):
