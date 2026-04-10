@@ -160,13 +160,29 @@ single run object. These are the right target.
 
 ### 3d. Artifact Content
 
-Artifact archive download URLs contain an artifact ID. Content never changes
-once an artifact is created (GitHub may expire server-side after 90 days, but
-our local copy is stable until then).
+Currently `fetch_artifact()` caches the full ZIP via `gh.api_raw()`, but even
+on a cache hit it reads the ZIP bytes from disk, wraps them in `BytesIO`, opens
+a `ZipFile`, and extracts the target file. The decompression happens on every
+access, cached or not.
 
-- In `gh.api_raw()`, detect artifact archive URLs by pattern
-  (`/artifacts/\d+/zip`)
+Instead, cache the extracted file bytes directly:
+
+- Download the ZIP (without caching it), extract the needed file, cache the
+  extracted bytes, discard the ZIP
+- Cache key: `archive_download_url + "#" + filename` (stable; archive URL
+  contains the artifact ID)
 - Store with long TTL unconditionally
+- Cache hits become a plain disk read with no decompression
+
+Trade-off: extracted JSON is uncompressed, so entries are larger than the ZIP
+(JSON compresses ~5-10x; `coverage-details.json` may be 2-5 MB uncompressed vs
+200-500 KB zipped). Acceptable given the 100-day TTL and bounded query window.
+
+The artifact listing (`/actions/runs/{id}/artifacts`) is also final once a run
+completes -- no new artifacts can be added. The listing URL should therefore
+use the long TTL when the parent run has a non-null `conclusion`, consistent
+with 3b. In practice this listing is fetched via `gh.api_multiple()` inside
+`fetch_artifact()`; the long-TTL logic there should mirror 3b.
 
 ### 3e. CommitLog Data
 
