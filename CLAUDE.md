@@ -35,12 +35,11 @@ ph/ph/formatters.py     -- Human-readable output formatting
   CommitLog data for tag refs. Backward-compatible with old entries lacking
   `expires_at`. Key stored in each entry for collision detection.
 - **Rate limiter**: GitHub gives 5000 calls/hour per personal token, shared
-  across all apps using that token -- no separate burst concept. The tool
-  manages this with two self-imposed limits: a burst budget (`--burst-limit`,
-  default 1500) consumed at full speed, then a sustained throttle
-  (`--rate-limit`, default 4000/hour) to preserve quota for other tools. At
-  startup, queries `/rate_limit` and clamps burst to `max(0, remaining - 1000)`
-  to leave headroom for concurrent usage. Warns to stderr if clamped.
+  across all apps using that token -- no separate burst concept. At startup,
+  queries `/rate_limit` and sets burst budget to `max(0, remaining - 1000)`,
+  consuming that quota at full speed before falling back to the sustained
+  throttle (`--rate-limit`, default 4000/hour). The 1000-call margin leaves
+  headroom for concurrent usage. Warns to stderr if quota is at or below 1000.
 - **`WorkflowRun.get_all()`** and **`CommitLog.get_all()`** use
   `@functools.lru_cache` -- within a single process, duplicate calls are free.
 - **`green_workflow` and `coverage_workflow`** both default to

@@ -41,14 +41,6 @@ def parse_args():
            " This lower value preserves quota for other tools.",
       default=4000)
   parser.add_argument(
-      "--burst-limit",
-      help="How many of the remaining API quota calls this run may consume"
-           " quickly (without per-call throttling). At startup the actual"
-           " remaining quota is queried and this is clamped to"
-           " max(0, remaining - 1000) to leave headroom for other tools."
-           " After the burst budget is spent, --rate-limit throttling applies.",
-      default=1500)
-  parser.add_argument(
       "--cache-folder", help="Where to cache GitHub API responses",
       default=os.path.join(home, ".cache", "shaka-player-ph"))
   parser.add_argument(
@@ -88,16 +80,15 @@ def parse_args():
 class CollectData(object):
   def __init__(self, args):
     remaining, reset_epoch = gh.get_rate_limit_remaining()
-    clamped_burst = max(0, min(args.burst_limit, remaining - 1000))
-    if clamped_burst < args.burst_limit:
+    burst = max(0, remaining - 1000)
+    if burst == 0:
       reset_time = datetime.datetime.fromtimestamp(reset_epoch)
       print(
         "Warning: only {} API calls remaining (limit resets at {}). "
-        "Burst limit clamped from {} to {}.".format(
-            remaining, reset_time, args.burst_limit, clamped_burst),
+        "Running in sustained-rate-only mode.".format(remaining, reset_time),
         file=sys.stderr)
 
-    gh.configure(clamped_burst, args.rate_limit,
+    gh.configure(burst, args.rate_limit,
                  args.cache_folder, args.cache_minutes,
                  args.debug)
 
