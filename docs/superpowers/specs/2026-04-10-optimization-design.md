@@ -227,7 +227,35 @@ long-TTL entries age out naturally.
 
 ---
 
-## Step 4: Decision Point -- Approach B (Parallel I/O)
+## Step 4: Rate Limit Awareness at Startup
+
+`RateLimit.__init__` currently ignores how much quota has already been consumed
+by prior processes using the same token. This caused a local run to fail after
+CI had already consumed most of the hourly quota.
+
+At startup, query the actual remaining quota and clamp the burst limit:
+
+```python
+actual = gh.api_single("/rate_limit")["resources"]["core"]
+burst_limit = max(0, min(args.burst_limit, actual["remaining"] - 1000))
+```
+
+The 1000-call safety margin accounts for other tools or processes using the
+same token concurrently. If remaining quota is at or below 1000, burst_limit
+is clamped to 0 -- the run proceeds but immediately falls into the sustained
+rate-limited mode rather than consuming a burst.
+
+If burst_limit is clamped below `args.burst_limit`, log a warning to stderr
+with the actual remaining count and the reset timestamp so the user knows why
+the run may be slow.
+
+Note: `gh api rate_limit` does not itself consume quota.
+
+This step can be implemented independently of Steps 3 and 5.
+
+---
+
+## Step 5: Decision Point -- Approach B (Parallel I/O)
 
 Re-measure after Step 3. If wall-clock time is still a pain point:
 
@@ -238,7 +266,7 @@ Re-measure after Step 3. If wall-clock time is still a pain point:
 - The rate limiter (`RateLimit`) will need a threading lock around `num_calls`
   and `start_time` access
 
-**Do Approach B if:** wall-clock time has not improved enough after Step 3.
+**Do Approach B if:** wall-clock time has not improved enough after Step 3 (now Step 3f).
 
 ---
 
@@ -252,4 +280,4 @@ Re-measure after Step 3. If wall-clock time is still a pain point:
 | `ph/commitlog.py` | Add disk cache calls; long TTL for tag refs, default TTL for branch refs |
 | `.github/workflows/deploy.yaml` | Add `actions/cache` restore/save around "Update metrics" step |
 | `CLAUDE.md` | Update after each step to reflect architectural changes |
-| `ph/ratelimit.py` | Threading lock (if Approach B) |
+| `ph/ratelimit.py` | Query `/rate_limit` at startup; clamp burst to `remaining - 1000`; threading lock (if Approach B) |
