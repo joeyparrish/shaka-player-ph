@@ -19,18 +19,20 @@ class DiskCache(object):
     self._prune_cache()
 
   def _prune_cache(self):
-    expired_limit = time.time() - (self.expiration_minutes * 60)
-
+    now = time.time()
     for name in os.listdir(self.cache_folder):
       path = os.path.join(self.cache_folder, name)
-      self._prune_file_if_expired(path, expired_limit)
+      self._prune_file_if_expired(path, now)
 
-  def _prune_file_if_expired(self, path, expired_limit):
+  def _prune_file_if_expired(self, path, now):
     try:
       with open(path, "r") as f:
         data = json.load(f)
 
-      if data["time"] < expired_limit:
+      expires_at = data.get(
+          "expires_at",
+          data["time"] + self.expiration_minutes * 60)
+      if expires_at < now:
         os.unlink(path)
     except Exception as e:
       print("Exception pruning cache file {}: {}".format(path, e),
@@ -38,7 +40,6 @@ class DiskCache(object):
       self._delete_corrupt_file(path)
 
   def _delete_corrupt_file(self, path):
-    # Try, unconditionally, and ignoring errors, to delete the file.
     try:
       os.unlink(path)
     except:
@@ -49,16 +50,26 @@ class DiskCache(object):
     return os.path.join(self.cache_folder, sha + ".json")
 
   def get(self, key):
-    """Returns data if it exists, or None if it doesn't."""
+    """Returns data if it exists and is valid, or None."""
     path = self._path_for_key(key)
     try:
       with open(path, "r") as f:
         stored = json.load(f)
-        if "text" in stored:
-          return stored["text"]
-        else:
-          return base64.b64decode(stored["bytes"])
-    except FileNotFoundError as e:
+
+      if stored.get("key") != key:
+        return None
+
+      expires_at = stored.get(
+          "expires_at",
+          stored["time"] + self.expiration_minutes * 60)
+      if time.time() >= expires_at:
+        return None
+
+      if "text" in stored:
+        return stored["text"]
+      else:
+        return base64.b64decode(stored["bytes"])
+    except FileNotFoundError:
       return None
     except Exception as e:
       print("Exception loading cache file {}: {}".format(path, e),
@@ -66,13 +77,16 @@ class DiskCache(object):
       self._delete_corrupt_file(path)
       return None
 
-  def store(self, key, data):
+  def store(self, key, data, ttl_minutes=None):
     """Stores data in the cache."""
+    if ttl_minutes is None:
+      ttl_minutes = self.expiration_minutes
     path = self._path_for_key(key)
     try:
       with open(path, "w") as f:
         stored = {
           "time": time.time(),
+          "expires_at": time.time() + ttl_minutes * 60,
           "key": key,
         }
         if type(data) is str:
