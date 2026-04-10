@@ -15,12 +15,12 @@ ph/main.py              -- CLI, CollectData, JSON/text output
 ph/ph/gh.py             -- GitHub API wrapper with disk cache and rate limiter
 ph/ph/diskcache.py      -- File-based cache (SHA256 key -> JSON file)
 ph/ph/ratelimit.py      -- Token-bucket rate limiter (burst + sustained)
-ph/ph/release.py        -- GitHub releases + CDN Last-Modified headers
+ph/ph/release.py        -- GitHub releases + CDN Last-Modified headers (via HEAD, cached 100d)
 ph/ph/workflowrun.py    -- GitHub Actions workflow runs, artifact/log fetching
 ph/ph/coveragesummary.py -- Coverage % from workflow run artifacts
 ph/ph/coveragedetails.py -- Per-file, per-line coverage from Istanbul JSON
 ph/ph/pullrequest.py    -- Merged PRs + incremental coverage
-ph/ph/commitlog.py      -- git fetch + git log for tag/commit counting
+ph/ph/commitlog.py      -- git fetch + git log; disk-cached (100d for tags, 120min for branches)
 ph/ph/base.py           -- Shared helpers: average(), load_and_filter()
 ph/ph/shell.py          -- subprocess wrapper
 ph/ph/formatters.py     -- Human-readable output formatting
@@ -28,35 +28,37 @@ ph/ph/formatters.py     -- Human-readable output formatting
 
 ## Key Behaviors
 
-- **Disk cache** (`~/.cache/shaka-player-ph/`): 120-minute TTL by default.
-  Keyed by URL (SHA256 hash). Stores text or base64-encoded bytes.
-- **Rate limiter**: burst of 1500 calls, then throttled to 4000/hour.
+- **Disk cache** (`~/.cache/shaka-player-ph/`): per-entry TTL stored as
+  `expires_at` in each cache file. Default TTL 120 minutes for list pages.
+  Long TTL (100 days) for immutable objects: CDN headers (via HEAD request),
+  completed workflow run metadata, PR commit data (SHA-keyed URLs), and
+  CommitLog data for tag refs. Backward-compatible with old entries lacking
+  `expires_at`. Key stored in each entry for collision detection.
+- **Rate limiter**: at startup, queries `/rate_limit` and clamps burst to
+  `max(0, remaining - 1000)` to avoid over-committing shared quota. Warns
+  to stderr if clamped. Sustained rate: 4000 calls/hour.
 - **`WorkflowRun.get_all()`** and **`CommitLog.get_all()`** use
   `@functools.lru_cache` -- within a single process, duplicate calls are free.
 - **`green_workflow` and `coverage_workflow`** both default to
   `selenium-lab-tests.yaml:schedule`, so `green_runs` and `coverage_runs` are
   the same object (lru_cache hit).
-- `Release.load_end_time()` calls `requests.get()` to fetch CDN `Last-Modified`
-  headers -- this bypasses the disk cache entirely (known optimization target).
-- `CommitLog.get_all()` runs `git fetch` + `git log` via subprocess -- also
-  bypasses the disk cache (known optimization target).
+- **CI cache persistence**: `deploy.yaml` uses `actions/cache` restore/save
+  around the metrics step so long-TTL cache entries persist across daily runs.
+  A cold run takes ~31 min; with a warm CI cache it takes ~6 min.
 
-## Optimization Plan
+## Performance Profile (warm run)
 
-See `docs/superpowers/specs/2026-04-10-optimization-design.md` for the full
-plan. Summary:
-
-1. **Baseline** -- run cold, record API calls and wall time per period
-2. **Approach A** (conditional) -- single-process multi-period; skip if 30d/7d
-   are already cheap in the baseline
-3. **Permanent caching** (unconditional) -- CDN HEAD requests, completed run
-   metadata, PR commit data, artifact content, CommitLog by tag
-4. **Approach B** (conditional) -- ThreadPoolExecutor for I/O-bound fetches;
-   do if wall-clock time is still a problem after step 3
+Coverage parsing accounts for ~84% of warm 90d runtime (~5 of 6 minutes).
+It is pure CPU (Python JSON parsing + set operations on CoverageDetails).
+The next optimization target is caching the *output* of coverage computation
+(e.g. serialized CoverageSummary/CoverageDetails objects) rather than the
+raw JSON bytes, so parsing is done once per run and reused across invocations.
 
 ## Development Notes
 
 - Requires `gh` CLI authenticated to GitHub.
 - Python dependencies: `python-dateutil`, `requests` (see `ph/requirements.txt`).
-- No test suite currently.
+- Test suite: `cd ph && python -m pytest tests/ -v`
 - The `ph/ph/` directory is the Python package; `ph/main.py` is the entry point.
+- See `docs/superpowers/specs/2026-04-10-optimization-design.md` for the full
+  optimization history and measurement data.
