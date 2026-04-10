@@ -95,3 +95,13 @@ def test_prune_keeps_long_ttl_entry(tmp_path):
     cache.store("key1", "value1", ttl_minutes=144000)
     cache._prune_cache()
     assert cache.get("key1") == "value1"
+
+
+def test_prune_skips_non_json_files(tmp_path):
+    """Non-JSON files in the cache directory are not deleted by prune."""
+    import os
+    non_json = tmp_path / "README.txt"
+    non_json.write_text("not a cache file")
+    cache = DiskCache(str(tmp_path), expiration_minutes=120)
+    cache._prune_cache()
+    assert non_json.exists()

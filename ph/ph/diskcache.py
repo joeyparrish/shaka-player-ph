@@ -21,6 +21,8 @@ class DiskCache(object):
   def _prune_cache(self):
     now = time.time()
     for name in os.listdir(self.cache_folder):
+      if not name.endswith(".json"):
+        continue
       path = os.path.join(self.cache_folder, name)
       self._prune_file_if_expired(path, now)
 
