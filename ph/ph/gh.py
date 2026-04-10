@@ -74,9 +74,11 @@ def _api_base(url_or_full_path, is_text, ttl_minutes=None):
   return data
 
 
-def api_raw(url_or_path):
-  # Artifact ZIPs use default TTL here; fetch_artifact() caches
-  # the extracted file bytes directly instead (see workflowrun.py).
+def api_raw(url_or_path, cache=True):
+  if not cache:
+    # Bypass disk cache entirely (caller will handle caching if needed).
+    rate_limiter.wait()
+    return shell.run_command(["gh", "api", url_or_path], text=False)
   return _api_base(url_or_path, is_text=False)
 
 

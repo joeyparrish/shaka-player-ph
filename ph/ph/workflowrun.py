@@ -65,10 +65,14 @@ class WorkflowRun(object):
 
         cached = gh.disk_cache.get(cache_key)
         if cached is not None:
+          # Stored as text (JSON); re-encode to bytes for callers.
+          if isinstance(cached, str):
+            return cached.encode('utf-8')
           return cached
 
         try:
-          zip_data = gh.api_raw(archive_url)
+          # Don't cache the ZIP itself; we extract and cache the file below.
+          zip_data = gh.api_raw(archive_url, cache=False)
         except RuntimeError as e:
           print(
             'Failed to fetch artifact for run from {}'.format(self.start_time),
@@ -85,7 +89,8 @@ class WorkflowRun(object):
           except KeyError:
             return None
 
-        gh.disk_cache.store(cache_key, file_bytes,
+        # Store as UTF-8 text to avoid base64 overhead (artifact files are JSON).
+        gh.disk_cache.store(cache_key, file_bytes.decode('utf-8'),
                             ttl_minutes=gh.LONG_TTL_MINUTES)
         return file_bytes
 
