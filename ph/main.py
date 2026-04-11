@@ -92,6 +92,8 @@ class CollectData(object):
     now = datetime.datetime.now(datetime.timezone.utc)
     time_range = datetime.timedelta(days=args.days)
     range_start = now - time_range
+    # Force the timestamp to midnight to make the range queries cacheable.
+    range_start = range_start.replace(hour=0, minute=0, second=0, microsecond=0)
 
     self.releases = Release.get_all(args.repo, range_start)
 
