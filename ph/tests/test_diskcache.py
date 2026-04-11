@@ -5,7 +5,7 @@ from ph.diskcache import DiskCache
 
 def test_store_and_get_default_ttl(tmp_path):
     cache = DiskCache(str(tmp_path), expiration_minutes=120)
-    cache.store("key1", "value1")
+    cache.store("key1", "value1", ttl_minutes=120)
     assert cache.get("key1") == "value1"
 
 

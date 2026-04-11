@@ -46,7 +46,7 @@ def http_head(url):
     return json.loads(cached)
 
   response = requests_lib.head(url)
-  headers = dict(response.headers)
+  headers = {k.lower(): v for k, v in response.headers.items()}
   disk_cache.store(url, json.dumps(headers), ttl_minutes=LONG_TTL_MINUTES)
   return headers
 
@@ -58,34 +58,38 @@ def _ttl_for_url(url):
   return None
 
 
-def _api_base(url_or_full_path, is_text, ttl_minutes=None):
+def _api_base(url_or_full_path, is_text, ttl_minutes=None, cache=True):
   global rate_limiter
   global disk_cache
   global debug_api
 
-  data = disk_cache.get(url_or_full_path)
+  if cache:
+    data = disk_cache.get(url_or_full_path)
 
-  if debug_api:
-    if data is None:
-      print("CACHE MISS: {}".format(url_or_full_path), file=sys.stderr)
-    else:
-      print("CACHE HIT: {}".format(url_or_full_path), file=sys.stderr)
+    if debug_api:
+      if data is None:
+        print("CACHE MISS: {}".format(url_or_full_path), file=sys.stderr)
+      else:
+        print("CACHE HIT: {}".format(url_or_full_path), file=sys.stderr)
 
-  if data is not None:
-    return data
+    if data is not None:
+      return data
+  elif debug_api:
+    print("CACHE SKIP: {}".format(url_or_full_path), file=sys.stderr)
 
   rate_limiter.wait()
   args = ["gh", "api", url_or_full_path]
   data = shell.run_command(args, text=is_text)
-  disk_cache.store(url_or_full_path, data, ttl_minutes=ttl_minutes)
+
+  if cache:
+    effective_ttl = ttl_minutes if ttl_minutes is not None else disk_cache.expiration_minutes
+    disk_cache.store(url_or_full_path, data, ttl_minutes=effective_ttl)
 
   return data
 
 
-def api_raw(url_or_path):
-  # Artifact ZIPs use default TTL here; fetch_artifact() caches
-  # the extracted file bytes directly instead (see workflowrun.py).
-  return _api_base(url_or_path, is_text=False)
+def api_raw(url_or_path, cache=True):
+  return _api_base(url_or_path, is_text=False, cache=cache)
 
 
 def api_single(url_or_path):
@@ -110,7 +114,8 @@ def api_single(url_or_path):
   if ttl is None and isinstance(parsed, dict) and parsed.get("conclusion") is not None:
     ttl = LONG_TTL_MINUTES
 
-  disk_cache.store(url_or_path, raw, ttl_minutes=ttl)
+  effective_ttl = ttl if ttl is not None else disk_cache.expiration_minutes
+  disk_cache.store(url_or_path, raw, ttl_minutes=effective_ttl)
   return parsed
 
 

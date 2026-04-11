@@ -9,7 +9,7 @@ from . import gh
 from . import shell
 
 
-_TAG_RE = re.compile(r'^v\d+\.\d+\.\d+$')
+_TAG_RE = re.compile(r'^v\d+\.\d+\.\d+')
 
 
 def _is_tag_ref(ref):
@@ -25,7 +25,7 @@ class CommitLog(object):
   @functools.lru_cache
   def get_all(repo, branch, range_start):
     cache_key = "commitlog:{}:{}".format(repo, branch)
-    ttl = gh.LONG_TTL_MINUTES if _is_tag_ref(branch) else None
+    ttl = gh.LONG_TTL_MINUTES if _is_tag_ref(branch) else gh.disk_cache.expiration_minutes
 
     cached = gh.disk_cache.get(cache_key)
     if cached is None:

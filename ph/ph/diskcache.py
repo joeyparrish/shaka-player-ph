@@ -75,10 +75,8 @@ class DiskCache(object):
       self._delete_corrupt_file(path)
       return None
 
-  def store(self, key, data, ttl_minutes=None):
+  def store(self, key, data, ttl_minutes):
     """Stores data in the cache."""
-    if ttl_minutes is None:
-      ttl_minutes = self.expiration_minutes
     path = self._path_for_key(key)
     try:
       with open(path, "w") as f:

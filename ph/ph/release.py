@@ -52,7 +52,7 @@ class Release(object):
     bare_version = self.name.replace("v", "")
     url = CDN_URL_TEMPLATE % bare_version
     headers = gh.http_head(url)
-    last_modified = headers.get("Last-Modified") or headers.get("last-modified")
+    last_modified = headers.get("last-modified")
     if last_modified is not None:
       self.end_time = dateutil.parser.parse(last_modified)
     else:
