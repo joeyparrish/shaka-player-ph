@@ -4,6 +4,8 @@
 
 import json
 
+from . import gh
+
 
 class CoverageSummary(object):
   def __init__(self, start_time, event, file_data):
@@ -21,6 +23,14 @@ class CoverageSummary(object):
 
     self.line_coverage = line_coverage
 
+  @classmethod
+  def from_line_coverage(cls, start_time, event, line_coverage):
+    obj = cls.__new__(cls)
+    obj.start_time = start_time
+    obj.event = event
+    obj.line_coverage = line_coverage
+    return obj
+
   def serializable(self):
     return {
       "start": self.start_time.timestamp(),
@@ -33,9 +43,20 @@ class CoverageSummary(object):
     results = []
 
     for run in coverage_runs:
+      key = "coverage-summary:{}".format(run.run_id)
+      cached = gh.disk_cache.get(key)
+      if cached is not None:
+        summary = CoverageSummary.from_line_coverage(
+            run.start_time, run.event, json.loads(cached))
+        results.append(summary)
+        continue
+
       file_data = run.fetch_artifact("coverage", "coverage.json")
-      if file_data is not None:
-        coverage_summary = CoverageSummary(run.start_time, run.event, file_data)
-        results.append(coverage_summary)
+      if file_data is None:
+        continue
+      summary = CoverageSummary(run.start_time, run.event, file_data)
+      gh.disk_cache.store(key, json.dumps(summary.line_coverage),
+                          ttl_minutes=gh.LONG_TTL_MINUTES)
+      results.append(summary)
 
     return sorted(results, key=lambda r: r.start_time)
