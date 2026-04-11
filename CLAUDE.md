@@ -35,6 +35,8 @@ ph/ph/formatters.py     -- Human-readable output formatting
   CommitLog data for tag refs, and computed coverage output
   (`coverage-summary:{run_id}`, `incremental-coverage:{run_id}`).
   Key stored in each entry for collision detection.
+- **Cache pruning**: In local tests, we can read 3600+ files totalling 300+MB
+  in 0.9 seconds.  This is plenty fast.
 - **Rate limiter**: GitHub gives 5000 calls/hour per personal token, shared
   across all apps using that token -- no separate burst concept. At startup,
   queries `/rate_limit` and sets burst budget to `max(0, remaining - 1000)`,
