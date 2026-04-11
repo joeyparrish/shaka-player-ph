@@ -53,14 +53,14 @@ class WorkflowRun(object):
       "flaky": self.flaky,
     }
 
-  def fetch_artifact(self, name, filename):
+  def fetch_artifact(self, name, filename, cache=True):
     results = gh.api_multiple(self.artifacts_url, "artifacts")
 
     zip_data = None
     for data in results:
       if data["name"] == name:
         try:
-          zip_data = gh.api_raw(data["archive_download_url"])
+          zip_data = gh.api_raw(data["archive_download_url"], cache=cache)
           break
         except RuntimeError as e:
           print(

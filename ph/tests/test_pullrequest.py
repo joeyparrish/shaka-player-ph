@@ -80,7 +80,7 @@ def test_incremental_coverage_cache_miss_stores_result():
 
     pr._load_incremental_coverage([run])
 
-    run.fetch_artifact.assert_called_once_with("coverage", "coverage-details.json")
+    run.fetch_artifact.assert_called_once_with("coverage", "coverage-details.json", cache=False)
     cached = gh.disk_cache.get("incremental-coverage:42")
     assert cached is not None
     data = json.loads(cached)

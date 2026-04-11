@@ -51,7 +51,7 @@ class CoverageSummary(object):
         results.append(summary)
         continue
 
-      file_data = run.fetch_artifact("coverage", "coverage.json")
+      file_data = run.fetch_artifact("coverage", "coverage.json", cache=False)
       if file_data is None:
         continue
       summary = CoverageSummary(run.start_time, run.event, file_data)

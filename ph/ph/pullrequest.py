@@ -97,7 +97,7 @@ class PullRequest(object):
       self.incremental_coverage = data["incremental"]
       return
 
-    file_data = run.fetch_artifact("coverage", "coverage-details.json")
+    file_data = run.fetch_artifact("coverage", "coverage-details.json", cache=False)
     if file_data is None:
       # No coverage details available.
       return

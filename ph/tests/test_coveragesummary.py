@@ -47,7 +47,7 @@ def test_coverage_summary_cache_miss_stores_result():
 
     results = CoverageSummary.get_all([run])
 
-    run.fetch_artifact.assert_called_once_with("coverage", "coverage.json")
+    run.fetch_artifact.assert_called_once_with("coverage", "coverage.json", cache=False)
     assert len(results) == 1
     assert results[0].line_coverage == 0.75
     cached = gh.disk_cache.get("coverage-summary:12345")
