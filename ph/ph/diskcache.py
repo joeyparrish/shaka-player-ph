@@ -31,9 +31,7 @@ class DiskCache(object):
       with open(path, "r") as f:
         data = json.load(f)
 
-      expires_at = data.get(
-          "expires_at",
-          data["time"] + self.expiration_minutes * 60)
+      expires_at = data.get("expires_at", 0)
       if expires_at < now:
         os.unlink(path)
     except Exception as e:
@@ -61,9 +59,7 @@ class DiskCache(object):
       if stored.get("key") != key:
         return None
 
-      expires_at = stored.get(
-          "expires_at",
-          stored["time"] + self.expiration_minutes * 60)
+      expires_at = stored.get("expires_at", 0)
       if time.time() >= expires_at:
         return None
 

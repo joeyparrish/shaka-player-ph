@@ -48,8 +48,8 @@ def test_key_mismatch_returns_none(tmp_path):
     assert cache.get("key1") is None
 
 
-def test_backward_compat_entry_without_expires_at(tmp_path):
-    """Entries written before this change (no expires_at) use default TTL."""
+def test_entry_without_expires_at_is_cache_miss(tmp_path):
+    """Entries lacking expires_at (old format) are always treated as expired."""
     import json, hashlib, os
     cache = DiskCache(str(tmp_path), expiration_minutes=120)
     real_key = "key1"
@@ -61,11 +61,11 @@ def test_backward_compat_entry_without_expires_at(tmp_path):
             "key": real_key,
             "text": "value1",
         }, f)
-    assert cache.get("key1") == "value1"
+    assert cache.get("key1") is None
 
 
-def test_backward_compat_expired_entry_without_expires_at(tmp_path):
-    """Old entries past the default TTL are treated as expired."""
+def test_entry_without_expires_at_is_pruned(tmp_path):
+    """Entries lacking expires_at are pruned immediately."""
     import json, hashlib, os
     cache = DiskCache(str(tmp_path), expiration_minutes=120)
     real_key = "key1"
@@ -73,11 +73,12 @@ def test_backward_compat_expired_entry_without_expires_at(tmp_path):
     path = os.path.join(str(tmp_path), sha + ".json")
     with open(path, "w") as f:
         json.dump({
-            "time": time.time() - 7201,  # 120 min + 1 sec ago
+            "time": time.time(),
             "key": real_key,
             "text": "value1",
         }, f)
-    assert cache.get("key1") is None
+    cache._prune_cache()
+    assert not os.path.exists(path)
 
 
 def test_prune_removes_expired_entry(tmp_path):
