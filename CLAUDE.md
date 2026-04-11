@@ -31,8 +31,10 @@ ph/ph/formatters.py     -- Human-readable output formatting
 - **Disk cache** (`~/.cache/shaka-player-ph/`): per-entry TTL stored as
   `expires_at` in each cache file. Default TTL 120 minutes for list pages.
   Long TTL (100 days) for immutable objects: CDN headers (via HEAD request),
-  completed workflow run metadata, PR commit data (SHA-keyed URLs), and
-  CommitLog data for tag refs. Backward-compatible with old entries lacking
+  completed workflow run metadata, PR commit data (SHA-keyed URLs),
+  CommitLog data for tag refs, and computed coverage output
+  (`coverage-summary:{run_id}`, `incremental-coverage:{run_id}`).
+  Backward-compatible with old entries lacking
   `expires_at`. Key stored in each entry for collision detection.
 - **Rate limiter**: GitHub gives 5000 calls/hour per personal token, shared
   across all apps using that token -- no separate burst concept. At startup,
@@ -51,11 +53,12 @@ ph/ph/formatters.py     -- Human-readable output formatting
 
 ## Performance Profile (warm run)
 
-Coverage parsing accounts for ~84% of warm 90d runtime (~5 of 6 minutes).
-It is pure CPU (Python JSON parsing + set operations on CoverageDetails).
-The next optimization target is caching the *output* of coverage computation
-(e.g. serialized CoverageSummary/CoverageDetails objects) rather than the
-raw JSON bytes, so parsing is done once per run and reused across invocations.
+Before coverage output caching, coverage parsing accounted for ~84% of warm
+90d runtime (~5 of 6 minutes). With caching in place, warm runs skip artifact
+fetching and Istanbul JSON parsing entirely for both coverage paths:
+`CoverageSummary.get_all()` (keyed by `coverage-summary:{run_id}`) and
+`PullRequest._load_incremental_coverage()` (keyed by
+`incremental-coverage:{run_id}`).
 
 ## Development Notes
 
