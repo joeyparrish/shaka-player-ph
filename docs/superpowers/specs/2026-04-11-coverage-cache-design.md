@@ -73,7 +73,7 @@ non-trivial set serialization, and CoverageSummary needs `start_time` and
 
 | Object | Key | Serialized format | TTL |
 |---|---|---|---|
-| `CoverageSummary.line_coverage` | `coverage-summary:{run_id}` | JSON float, e.g. `0.8423` | 100 days |
+| `CoverageSummary.line_coverage` | `coverage-summary:{run_id}` | Plain float string, e.g. `0.8423` | 100 days |
 | `CoverageDetails.files` | `coverage-details:{run_id}` | JSON object (see below) | 100 days |
 
 ### CoverageDetails serialization
@@ -122,7 +122,7 @@ for run in coverage_runs:
     cached = gh.disk_cache.get(key)
     if cached is not None:
         summary = CoverageSummary.from_line_coverage(
-            run.start_time, run.event, json.loads(cached))
+            run.start_time, run.event, float(cached))
         results.append(summary)
         continue
 
@@ -130,7 +130,7 @@ for run in coverage_runs:
     if file_data is None:
         continue
     summary = CoverageSummary(run.start_time, run.event, file_data)
-    gh.disk_cache.store(key, json.dumps(summary.line_coverage),
+    gh.disk_cache.store(key, str(summary.line_coverage),
                         ttl_minutes=gh.LONG_TTL_MINUTES)
     results.append(summary)
 ```
@@ -203,7 +203,7 @@ always safe.
   return a minimal `coverage.json`; call `get_all()`; assert the float is now
   in disk cache.
 - `test_coverage_summary_float_round_trip`: store a known `line_coverage`
-  float, reload from cache, assert value is preserved.
+  float via `str()`, reload with `float()`, assert value is preserved.
 
 ### `test_pullrequest.py`
 
