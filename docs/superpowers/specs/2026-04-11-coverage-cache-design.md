@@ -74,19 +74,17 @@ incremental coverage call site's serialization is non-trivial.
 | Object | Key | Serialized format | TTL |
 |---|---|---|---|
 | `CoverageSummary.line_coverage` | `coverage-summary:{run_id}` | JSON float, e.g. `0.8423` | 100 days |
-| PR incremental coverage | `incremental-coverage:{run_id}` | JSON object, e.g. `{"covered": 12, "instrumented": 15}` | 100 days |
+| PR incremental coverage | `incremental-coverage:{run_id}` | JSON object, e.g. `{"covered": 12, "instrumented": 15, "incremental": 0.8}` | 100 days |
 
 ### PR incremental coverage serialization
 
-The final output of `_load_incremental_coverage` is two ints:
-`num_covered_lines` and `num_instrumented_lines`. `incremental_coverage` is
-derived from those two and is not stored separately.
+All three output fields are cached directly:
 
-Cached as: `json.dumps({"covered": num_covered_lines, "instrumented": num_instrumented_lines})`
+Cached as: `json.dumps({"covered": num_covered_lines, "instrumented": num_instrumented_lines, "incremental": incremental_coverage})`
 
-On load: reconstruct both ints, then recompute `incremental_coverage` using
-the same logic as the live path (`covered / instrumented` if instrumented > 0,
-else `None`).
+`incremental_coverage` is `None` when `num_instrumented_lines == 0`, which
+serializes as JSON `null` and restores correctly. Caching it directly avoids
+repeating the conditional logic on load.
 
 Only cache when the artifact was found and processed (i.e. when
 `num_instrumented_lines` is not None). If no matching run or no artifact
@@ -149,11 +147,7 @@ if cached is not None:
     data = json.loads(cached)
     self.num_covered_lines = data["covered"]
     self.num_instrumented_lines = data["instrumented"]
-    if self.num_instrumented_lines == 0:
-        self.incremental_coverage = None
-    else:
-        self.incremental_coverage = (
-            self.num_covered_lines / self.num_instrumented_lines)
+    self.incremental_coverage = data["incremental"]
     return
 
 file_data = run.fetch_artifact("coverage", "coverage-details.json")
@@ -183,7 +177,8 @@ else:
 
 gh.disk_cache.store(key,
     json.dumps({"covered": self.num_covered_lines,
-                "instrumented": self.num_instrumented_lines}),
+                "instrumented": self.num_instrumented_lines,
+                "incremental": self.incremental_coverage}),
     ttl_minutes=gh.LONG_TTL_MINUTES)
 ```
 
@@ -220,7 +215,8 @@ always safe.
   to return minimal coverage-details JSON; call `_load_incremental_coverage()`;
   assert the `{"covered": ..., "instrumented": ...}` dict is now in disk cache.
 - `test_incremental_coverage_zero_instrumented_lines`: cache hit with
-  `{"covered": 0, "instrumented": 0}`; assert `incremental_coverage is None`.
+  `{"covered": 0, "instrumented": 0, "incremental": null}`; assert
+  `incremental_coverage is None`.
 
 ---
 
