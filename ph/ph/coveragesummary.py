@@ -24,7 +24,7 @@ class CoverageSummary(object):
     self.line_coverage = line_coverage
 
   @classmethod
-  def from_line_coverage(cls, start_time, event, line_coverage):
+  def from_cache(cls, start_time, event, line_coverage):
     obj = cls.__new__(cls)
     obj.start_time = start_time
     obj.event = event
@@ -46,7 +46,7 @@ class CoverageSummary(object):
       key = "coverage-summary:{}".format(run.run_id)
       cached = gh.disk_cache.get(key)
       if cached is not None:
-        summary = CoverageSummary.from_line_coverage(
+        summary = CoverageSummary.from_cache(
             run.start_time, run.event, json.loads(cached))
         results.append(summary)
         continue
