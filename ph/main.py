@@ -77,10 +77,14 @@ def parse_args():
   return parser.parse_args()
 
 
+# Headroom reserved for other tools sharing the same token.
+_QUOTA_SAFETY_MARGIN = 1000
+
+
 class CollectData(object):
   def __init__(self, args):
     remaining, reset_epoch = gh.get_rate_limit_remaining()
-    burst = max(0, remaining - 1000)
+    burst = max(0, remaining - _QUOTA_SAFETY_MARGIN)
     if burst == 0:
       reset_time = datetime.datetime.fromtimestamp(reset_epoch)
       print(
