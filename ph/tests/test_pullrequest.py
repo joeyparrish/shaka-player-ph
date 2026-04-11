@@ -1,3 +1,4 @@
+import datetime
 import json
 import pytest
 from unittest.mock import MagicMock
@@ -32,6 +33,7 @@ def _make_run(run_id, head_sha, fetch_return=None):
     run = MagicMock()
     run.run_id = run_id
     run.head_sha = head_sha
+    run.start_time = datetime.datetime(2026, 1, 1, tzinfo=datetime.timezone.utc)
     run.fetch_artifact.return_value = fetch_return
     return run
 
