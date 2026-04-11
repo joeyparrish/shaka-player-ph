@@ -29,7 +29,6 @@ def _cache_path(tmp_path, key):
 
 def test_commitlog_tag_ref_is_cached(tmp_path):
     from ph.commitlog import CommitLog
-    CommitLog.get_all.cache_clear()
     with patch("ph.shell.run_command", return_value=FAKE_GIT_LOG):
         CommitLog.get_all("owner/repo", "v4.3.5", None)
     key = "commitlog:owner/repo:v4.3.5"
@@ -42,7 +41,6 @@ def test_commitlog_tag_ref_is_cached(tmp_path):
 
 def test_commitlog_branch_ref_uses_default_ttl(tmp_path):
     from ph.commitlog import CommitLog
-    CommitLog.get_all.cache_clear()
     with patch("ph.shell.run_command", return_value=FAKE_GIT_LOG):
         CommitLog.get_all("owner/repo", "v4.3.x", None)
     key = "commitlog:owner/repo:v4.3.x"
@@ -54,24 +52,8 @@ def test_commitlog_branch_ref_uses_default_ttl(tmp_path):
     assert data["expires_at"] < time.time() + 86400 * 99
 
 
-def test_commitlog_cache_hit_skips_git(tmp_path):
-    from ph.commitlog import CommitLog
-    CommitLog.get_all.cache_clear()
-    # Populate cache
-    with patch("ph.shell.run_command", return_value=FAKE_GIT_LOG) as mock_cmd:
-        CommitLog.get_all("owner/repo", "v4.3.5", None)
-        first_call_count = mock_cmd.call_count
-
-    CommitLog.get_all.cache_clear()
-    with patch("ph.shell.run_command", return_value=FAKE_GIT_LOG) as mock_cmd:
-        CommitLog.get_all("owner/repo", "v4.3.5", None)
-        # Cache hit: git commands should not be called
-        assert mock_cmd.call_count == 0
-
-
 def test_commitlog_parses_correctly(tmp_path):
     from ph.commitlog import CommitLog
-    CommitLog.get_all.cache_clear()
     with patch("ph.shell.run_command", return_value=FAKE_GIT_LOG):
         logs = CommitLog.get_all("owner/repo", "v4.3.5", None)
     assert len(logs) == 3

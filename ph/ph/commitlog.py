@@ -2,7 +2,6 @@
 # Copyright 2023 Google LLC
 # SPDX-License-Identifier: Apache-2.0
 
-import functools
 import re
 
 from . import gh
@@ -22,7 +21,6 @@ class CommitLog(object):
     self.tags = tags
 
   @staticmethod
-  @functools.lru_cache
   def get_all(repo, branch, range_start):
     cache_key = "commitlog:{}:{}".format(repo, branch)
     ttl = gh.LONG_TTL_MINUTES if _is_tag_ref(branch) else gh.SHORT_TTL_MINUTES

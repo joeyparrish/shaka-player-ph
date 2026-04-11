@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import dateutil.parser
-import functools
 import io
 import sys
 import zipfile
@@ -99,7 +98,6 @@ class WorkflowRun(object):
     return parsed.get("conclusion") is not None
 
   @staticmethod
-  @functools.lru_cache
   def get_all(repo, workflow, range_start):
     if ":" in workflow:
       workflow_filename, event_filter = workflow.split(":")
