@@ -4,13 +4,12 @@ Date: 2026-04-11
 
 ## Goal
 
-Cache the computed output of coverage parsing so that `CoverageDetails` and
-`CoverageSummary` objects are reconstructed from a compact representation on
-warm runs, rather than re-parsed from raw Istanbul JSON every time.
+Cache the computed output of coverage processing so that expensive artifact
+fetching and parsing is skipped on warm runs.
 
 On a warm 90-day run, 285 `coverage-details.json` files and 70 `coverage.json`
 files are read from disk cache and parsed. Coverage processing accounts for
-~84% of warm 90d runtime (~5 of 6 minutes). Caching parsed output eliminates
+~84% of warm 90d runtime (~5 of 6 minutes). Caching computed outputs eliminates
 that cost on subsequent runs.
 
 ---
@@ -31,7 +30,8 @@ Two callers construct coverage objects from artifact data:
 - `PullRequest._load_incremental_coverage()` in `pullrequest.py` -- one
   `coverage-details.json` per merged PR with a matching workflow run (~285
   files in 90d). Parsing is expensive: Istanbul JSON with full source maps,
-  followed by set operations to compute instrumented/executed line sets.
+  followed by set operations to compute instrumented/executed line sets,
+  followed by intersection with the PR's changed lines.
 
 ---
 
@@ -58,14 +58,14 @@ and informs whether both phases are worth bypassing.
 
 ## Architecture
 
-No changes to `CoverageDetails` constructors. One classmethod added to
-`CoverageSummary`. Caching lives in the two call sites that already hold
-`run.run_id`.
+No changes to `CoverageDetails` or `CoverageSummary` constructors. One
+classmethod added to `CoverageSummary`. Caching lives in the two call sites
+that already hold `run.run_id`.
 
 Both call sites do an explicit check/call/store inline -- there is no shared
-helper, because neither call site benefits from one: CoverageDetails has
-non-trivial set serialization, and CoverageSummary needs `start_time` and
-`event` from `run` that aren't in the cached value.
+helper, because neither call site benefits from one: the CoverageSummary call
+site needs `start_time` and `event` from `run` (not in the cache), and the
+incremental coverage call site's serialization is non-trivial.
 
 ---
 
@@ -74,22 +74,23 @@ non-trivial set serialization, and CoverageSummary needs `start_time` and
 | Object | Key | Serialized format | TTL |
 |---|---|---|---|
 | `CoverageSummary.line_coverage` | `coverage-summary:{run_id}` | JSON float, e.g. `0.8423` | 100 days |
-| `CoverageDetails.files` | `coverage-details:{run_id}` | JSON object (see below) | 100 days |
+| PR incremental coverage | `incremental-coverage:{run_id}` | JSON object, e.g. `{"covered": 12, "instrumented": 15}` | 100 days |
 
-### CoverageDetails serialization
+### PR incremental coverage serialization
 
-`CoverageDetails.files` is `{path: {"instrumented": set[int], "executed": set[int]}}`.
+The final output of `_load_incremental_coverage` is two ints:
+`num_covered_lines` and `num_instrumented_lines`. `incremental_coverage` is
+derived from those two and is not stored separately.
 
-Serialized as:
-```json
-{
-  "lib/player.js": {"instrumented": [1, 2, 3], "executed": [1, 3]},
-  ...
-}
-```
+Cached as: `json.dumps({"covered": num_covered_lines, "instrumented": num_instrumented_lines})`
 
-Sets become sorted int lists on store; `set(...)` reconstructs them on load.
-No new imports -- both files already use `json`.
+On load: reconstruct both ints, then recompute `incremental_coverage` using
+the same logic as the live path (`covered / instrumented` if instrumented > 0,
+else `None`).
+
+Only cache when the artifact was found and processed (i.e. when
+`num_instrumented_lines` is not None). If no matching run or no artifact
+exists, don't cache -- allow a retry next run in case it becomes available.
 
 ### TTL rationale
 
@@ -142,32 +143,32 @@ run = self._matching_workflow_run(runs)
 if run is None:
     return
 
-key = "coverage-details:{}".format(run.run_id)
+key = "incremental-coverage:{}".format(run.run_id)
 cached = gh.disk_cache.get(key)
 if cached is not None:
-    raw_files = json.loads(cached)
-    files = {path: {"instrumented": set(v["instrumented"]),
-                    "executed": set(v["executed"])}
-             for path, v in raw_files.items()}
-else:
-    file_data = run.fetch_artifact("coverage", "coverage-details.json")
-    if file_data is None:
-        return
-    details = CoverageDetails(file_data)
-    files = details.files
-    serialized = {path: {"instrumented": sorted(v["instrumented"]),
-                         "executed": sorted(v["executed"])}
-                  for path, v in files.items()}
-    gh.disk_cache.store(key, json.dumps(serialized),
-                        ttl_minutes=gh.LONG_TTL_MINUTES)
+    data = json.loads(cached)
+    self.num_covered_lines = data["covered"]
+    self.num_instrumented_lines = data["instrumented"]
+    if self.num_instrumented_lines == 0:
+        self.incremental_coverage = None
+    else:
+        self.incremental_coverage = (
+            self.num_covered_lines / self.num_instrumented_lines)
+    return
+
+file_data = run.fetch_artifact("coverage", "coverage-details.json")
+if file_data is None:
+    return
+
+coverage_details = CoverageDetails(file_data)
 
 self.num_covered_lines = 0
 self.num_instrumented_lines = 0
 for path in self.changes:
-    if path in files:
+    if path in coverage_details.files:
         changed_lines = self.changes[path]
-        instrumented_lines = files[path]["instrumented"]
-        executed_lines = files[path]["executed"]
+        instrumented_lines = coverage_details.files[path]["instrumented"]
+        executed_lines = coverage_details.files[path]["executed"]
         for line in changed_lines:
             if line in instrumented_lines:
                 self.num_instrumented_lines += 1
@@ -179,6 +180,11 @@ if self.num_instrumented_lines == 0:
 else:
     self.incremental_coverage = (
         self.num_covered_lines / self.num_instrumented_lines)
+
+gh.disk_cache.store(key,
+    json.dumps({"covered": self.num_covered_lines,
+                "instrumented": self.num_instrumented_lines}),
+    ttl_minutes=gh.LONG_TTL_MINUTES)
 ```
 
 ---
@@ -207,15 +213,14 @@ always safe.
 
 ### `test_pullrequest.py`
 
-- `test_incremental_coverage_cache_hit_skips_parse`: pre-populate disk cache
-  with a serialized `files` dict; call `_load_incremental_coverage()`; assert
-  `CoverageDetails` is never constructed (mock or patch the constructor).
+- `test_incremental_coverage_cache_hit_skips_fetch`: pre-populate disk cache
+  with `{"covered": 10, "instrumented": 20}`; call `_load_incremental_coverage()`;
+  assert `fetch_artifact` is never called and `incremental_coverage == 0.5`.
 - `test_incremental_coverage_cache_miss_stores_result`: mock `fetch_artifact`
   to return minimal coverage-details JSON; call `_load_incremental_coverage()`;
-  assert the serialized files dict is now in disk cache.
-- `test_coverage_details_serialization_round_trip`: build a `files` dict with
-  known sets, serialize to JSON (sorted lists), deserialize back to sets,
-  assert equality.
+  assert the `{"covered": ..., "instrumented": ...}` dict is now in disk cache.
+- `test_incremental_coverage_zero_instrumented_lines`: cache hit with
+  `{"covered": 0, "instrumented": 0}`; assert `incremental_coverage is None`.
 
 ---
 
@@ -242,7 +247,7 @@ correctly and the cache size is actually a problem in practice.
 | File | Change |
 |---|---|
 | `ph/ph/coveragesummary.py` | Add `from_line_coverage` classmethod; cache `line_coverage` float in `get_all()` |
-| `ph/ph/pullrequest.py` | Cache `CoverageDetails.files` in `_load_incremental_coverage()` |
+| `ph/ph/pullrequest.py` | Cache `num_covered_lines` + `num_instrumented_lines` in `_load_incremental_coverage()` |
 | `ph/tests/test_coveragesummary.py` | New: cache hit, cache miss, and round-trip tests |
-| `ph/tests/test_pullrequest.py` | New or extended: cache hit, cache miss, and serialization tests |
+| `ph/tests/test_pullrequest.py` | New or extended: cache hit, cache miss, and zero-instrumented tests |
 | `CLAUDE.md` | Update performance profile and architecture notes |
