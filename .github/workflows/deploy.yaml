@@ -49,6 +49,13 @@ jobs:
       - name: Install Python requirements
         run: pip install -r ph/requirements.txt
 
+      # We use separate restore and save steps (instead of the combined
+      # actions/cache) so that the cache is saved even if the metrics step
+      # fails.  The exact key includes run_id so each run writes a new cache
+      # entry -- actions/cache skips the save if the exact key already exists,
+      # so a stable key would only ever be written once.  The restore-keys
+      # prefix picks up the most recent prior entry on restore.  GitHub evicts
+      # entries not accessed in 7 days, so stale entries don't accumulate.
       - name: Restore PH cache
         uses: actions/cache/restore@v4
         with:
