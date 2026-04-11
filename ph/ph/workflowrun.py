@@ -53,7 +53,7 @@ class WorkflowRun(object):
       "flaky": self.flaky,
     }
 
-  def fetch_artifact(self, name, filename, cache=True):
+  def fetch_artifact(self, name, filename, cache):
     results = gh.api_multiple(self.artifacts_url, "artifacts")
 
     zip_data = None
