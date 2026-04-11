@@ -34,8 +34,7 @@ ph/ph/formatters.py     -- Human-readable output formatting
   completed workflow run metadata, PR commit data (SHA-keyed URLs),
   CommitLog data for tag refs, and computed coverage output
   (`coverage-summary:{run_id}`, `incremental-coverage:{run_id}`).
-  Backward-compatible with old entries lacking
-  `expires_at`. Key stored in each entry for collision detection.
+  Key stored in each entry for collision detection.
 - **Rate limiter**: GitHub gives 5000 calls/hour per personal token, shared
   across all apps using that token -- no separate burst concept. At startup,
   queries `/rate_limit` and sets burst budget to `max(0, remaining - 1000)`,
@@ -66,5 +65,3 @@ fetching and Istanbul JSON parsing entirely for both coverage paths:
 - Python dependencies: `python-dateutil`, `requests` (see `ph/requirements.txt`).
 - Test suite: `cd ph && python -m pytest tests/ -v`
 - The `ph/ph/` directory is the Python package; `ph/main.py` is the entry point.
-- See `docs/superpowers/specs/2026-04-10-optimization-design.md` for the full
-  optimization history and measurement data.
