@@ -44,11 +44,6 @@ def parse_args():
       "--cache-folder", help="Where to cache GitHub API responses",
       default=os.path.join(home, ".cache", "shaka-player-ph"))
   parser.add_argument(
-      "--cache-minutes",
-      help="How long to cache GitHub API responses. Should be long enough that"
-           " we never request the same thing twice in a workflow run.",
-      default=120)
-  parser.add_argument(
       "--green-workflow", "-gw",
       help="GitHub Actions workflow (filename or filename:event)"
            " for greenness and flake measurements",
@@ -92,9 +87,7 @@ class CollectData(object):
         "Running in sustained-rate-only mode.".format(remaining, reset_time),
         file=sys.stderr)
 
-    gh.configure(burst, args.rate_limit,
-                 args.cache_folder, args.cache_minutes,
-                 args.debug)
+    gh.configure(burst, args.rate_limit, args.cache_folder, args.debug)
 
     now = datetime.datetime.now(datetime.timezone.utc)
     time_range = datetime.timedelta(days=args.days)

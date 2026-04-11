@@ -15,7 +15,6 @@ def configure_gh(tmp_path):
         burst_limit=100,
         rate_limit_per_hour=4000,
         cache_folder=str(tmp_path),
-        cache_minutes=120,
         debug=False)
     yield
 

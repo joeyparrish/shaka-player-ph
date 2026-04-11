@@ -13,6 +13,7 @@ from .diskcache import DiskCache
 from .ratelimit import RateLimit
 
 
+SHORT_TTL_MINUTES = 120  # 2 hours
 LONG_TTL_MINUTES = 144_000  # 100 days
 
 rate_limiter = None
@@ -28,14 +29,13 @@ def get_rate_limit_remaining():
   return core["remaining"], core["reset"]
 
 
-def configure(burst_limit, rate_limit_per_hour, cache_folder, cache_minutes,
-              debug):
+def configure(burst_limit, rate_limit_per_hour, cache_folder, debug):
   global rate_limiter
   global disk_cache
   global debug_api
 
   rate_limiter = RateLimit(burst_limit, rate_limit_per_hour)
-  disk_cache = DiskCache(cache_folder, cache_minutes)
+  disk_cache = DiskCache(cache_folder)
   debug_api = debug
 
 
@@ -51,14 +51,11 @@ def http_head(url):
   return headers
 
 
-def _ttl_for_url(url):
-  """Return LONG_TTL_MINUTES for URLs whose content is immutable, else None."""
-  if re.search(r'/commits/[0-9a-f]{40}', url):
-    return LONG_TTL_MINUTES
-  return None
+def _is_url_immutable(url):
+  return re.search(r'/commits/[0-9a-f]{40}', url)
 
 
-def _api_base(url_or_full_path, is_text, ttl_minutes=None, cache=True):
+def _api_base(url_or_full_path, is_text, ttl_minutes, cache=True):
   global rate_limiter
   global disk_cache
   global debug_api
@@ -82,20 +79,17 @@ def _api_base(url_or_full_path, is_text, ttl_minutes=None, cache=True):
   data = shell.run_command(args, text=is_text)
 
   if cache:
-    effective_ttl = ttl_minutes if ttl_minutes is not None else disk_cache.expiration_minutes
-    disk_cache.store(url_or_full_path, data, ttl_minutes=effective_ttl)
+    disk_cache.store(url_or_full_path, data, ttl_minutes=ttl_minutes)
 
   return data
 
 
 def api_raw(url_or_path, cache=True):
-  return _api_base(url_or_path, is_text=False, cache=cache)
+  return _api_base(url_or_path,
+      is_text=False, ttl_minutes=SHORT_TTL_MINUTES, cache=cache)
 
 
-def api_single(url_or_path):
-  # Check URL-based TTL first
-  ttl = _ttl_for_url(url_or_path)
-
+def api_single(url_or_path, is_immutable_cb=None):
   # For cache misses we may detect TTL from content
   cached = disk_cache.get(url_or_path)
   if cached is not None:
@@ -110,32 +104,30 @@ def api_single(url_or_path):
   raw = shell.run_command(["gh", "api", url_or_path], text=True)
   parsed = json.loads(raw)
 
-  # Use long TTL for completed workflow runs (content-based detection)
-  if ttl is None and isinstance(parsed, dict) and parsed.get("conclusion") is not None:
-    ttl = LONG_TTL_MINUTES
+  is_immutable = _is_url_immutable(url_or_path)
+  if is_immutable_cb is not None:
+    is_immutable = is_immutable_cb(parsed)
 
-  effective_ttl = ttl if ttl is not None else disk_cache.expiration_minutes
-  disk_cache.store(url_or_path, raw, ttl_minutes=effective_ttl)
+  ttl_minutes = LONG_TTL_MINUTES if is_immutable else SHORT_TTL_MINUTES
+
+  disk_cache.store(url_or_path, raw, ttl_minutes=ttl_minutes)
   return parsed
 
 
-def api_multiple(url_or_path, subkey=None, stop_predicate=None,
-                 ttl_minutes=None):
+def api_multiple(url_or_path, subkey=None, stop_predicate=None):
   if "?" in url_or_path:
     url_or_path += "&page_size=100"
   else:
     url_or_path += "?page_size=100"
 
-  # Detect URL-based long TTL (e.g. commit SHAs); caller-supplied ttl_minutes
-  # takes precedence if provided.
-  url_ttl = _ttl_for_url(url_or_path)
-  effective_ttl = ttl_minutes if ttl_minutes is not None else url_ttl
+  is_immutable = _is_url_immutable(url_or_path)
+  ttl_minutes = LONG_TTL_MINUTES if is_immutable else SHORT_TTL_MINUTES
 
   page_number = 1
   results = []
   while True:
     next_page_url = url_or_path + "&page={}".format(page_number)
-    output = _api_base(next_page_url, is_text=True, ttl_minutes=effective_ttl)
+    output = _api_base(next_page_url, is_text=True, ttl_minutes=ttl_minutes)
 
     next_page = json.loads(output)
     if subkey is not None:

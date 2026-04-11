@@ -4,6 +4,7 @@ from unittest.mock import patch, MagicMock
 from ph import gh
 from ph.diskcache import DiskCache
 from ph.ratelimit import RateLimit
+from ph.workflowrun import WorkflowRun
 
 
 @pytest.fixture(autouse=True)
@@ -12,7 +13,6 @@ def configure_gh(tmp_path):
         burst_limit=100,
         rate_limit_per_hour=4000,
         cache_folder=str(tmp_path),
-        cache_minutes=120,
         debug=False)
     yield
 
@@ -38,7 +38,7 @@ def test_api_single_completed_run_uses_long_ttl(tmp_path):
     url = "/repos/owner/repo/actions/runs/99999999/attempts/1"
     run_data = {"id": 99999999, "conclusion": "success", "head_sha": "abc"}
     with patch("ph.shell.run_command", return_value=json.dumps(run_data)):
-        gh.api_single(url)
+        gh.api_single(url, WorkflowRun.is_immutable)
     import time, hashlib, os
     sha = hashlib.sha256(url.encode("utf8")).hexdigest()
     path = os.path.join(str(tmp_path), sha + ".json")

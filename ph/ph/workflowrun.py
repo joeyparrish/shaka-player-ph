@@ -95,6 +95,10 @@ class WorkflowRun(object):
     return output
 
   @staticmethod
+  def is_immutable(parsed):
+    return parsed.get("conclusion") is not None
+
+  @staticmethod
   @functools.lru_cache
   def get_all(repo, workflow, range_start):
     if ":" in workflow:
@@ -115,7 +119,7 @@ class WorkflowRun(object):
 
   @staticmethod
   def load_by_url(url):
-    data = gh.api_single(url)
+    data = gh.api_single(url, WorkflowRun.is_immutable)
     return WorkflowRun(data)
 
   @staticmethod

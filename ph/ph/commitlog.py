@@ -25,7 +25,7 @@ class CommitLog(object):
   @functools.lru_cache
   def get_all(repo, branch, range_start):
     cache_key = "commitlog:{}:{}".format(repo, branch)
-    ttl = gh.LONG_TTL_MINUTES if _is_tag_ref(branch) else gh.disk_cache.expiration_minutes
+    ttl = gh.LONG_TTL_MINUTES if _is_tag_ref(branch) else gh.SHORT_TTL_MINUTES
 
     cached = gh.disk_cache.get(cache_key)
     if cached is None:

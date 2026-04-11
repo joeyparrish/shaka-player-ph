@@ -12,9 +12,8 @@ import sys
 class DiskCache(object):
   """Cache some arbitrary data on disk."""
 
-  def __init__(self, cache_folder, expiration_minutes):
+  def __init__(self, cache_folder):
     self.cache_folder = cache_folder
-    self.expiration_minutes = expiration_minutes
     os.makedirs(self.cache_folder, mode=0o755, exist_ok=True)
     self._prune_cache()
 
