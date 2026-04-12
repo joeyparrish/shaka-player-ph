@@ -91,13 +91,12 @@ class PullRequest(object):
     key = "incremental-coverage:{}".format(run.run_id)
     cached = gh.disk_cache.get(key)
     if cached is not None:
-      data = json.loads(cached)
-      self.num_covered_lines = data["covered"]
-      self.num_instrumented_lines = data["instrumented"]
-      self.incremental_coverage = data["incremental"]
+      self.num_covered_lines = cached["covered"]
+      self.num_instrumented_lines = cached["instrumented"]
+      self.incremental_coverage = cached["incremental"]
       return
 
-    file_data = run.fetch_artifact("coverage", "coverage-details.json", cache=False)
+    file_data = run.fetch_artifact("coverage", "coverage-details.json")
     if file_data is None:
       # No coverage details available.
       return
@@ -126,10 +125,11 @@ class PullRequest(object):
       self.incremental_coverage = (
           self.num_covered_lines / self.num_instrumented_lines)
 
+    # This will be stored as a JSON object.
     gh.disk_cache.store(key,
-        json.dumps({"covered": self.num_covered_lines,
-                    "instrumented": self.num_instrumented_lines,
-                    "incremental": self.incremental_coverage}),
+        {"covered": self.num_covered_lines,
+         "instrumented": self.num_instrumented_lines,
+         "incremental": self.incremental_coverage},
         ttl_minutes=gh.LONG_TTL_MINUTES)
 
   @staticmethod

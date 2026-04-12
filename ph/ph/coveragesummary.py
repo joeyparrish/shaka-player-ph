@@ -44,18 +44,19 @@ class CoverageSummary(object):
 
     for run in coverage_runs:
       key = "coverage-summary:{}".format(run.run_id)
-      cached = gh.disk_cache.get(key)
-      if cached is not None:
+      cached_line_coverage = gh.disk_cache.get(key)
+      if cached_line_coverage is not None:
         summary = CoverageSummary.from_cache(
-            run.start_time, run.event, json.loads(cached))
+            run.start_time, run.event, cached_line_coverage)
         results.append(summary)
         continue
 
-      file_data = run.fetch_artifact("coverage", "coverage.json", cache=False)
+      file_data = run.fetch_artifact("coverage", "coverage.json")
       if file_data is None:
         continue
       summary = CoverageSummary(run.start_time, run.event, file_data)
-      gh.disk_cache.store(key, json.dumps(summary.line_coverage),
+      # This will be stored as a JSON number.
+      gh.disk_cache.store(key, summary.line_coverage,
                           ttl_minutes=gh.LONG_TTL_MINUTES)
       results.append(summary)
 

@@ -62,7 +62,7 @@ def test_incremental_coverage_cache_hit_skips_fetch():
 
     gh.disk_cache.store(
         "incremental-coverage:42",
-        json.dumps({"covered": 10, "instrumented": 20, "incremental": 0.5}),
+        {"covered": 10, "instrumented": 20, "incremental": 0.5},
         ttl_minutes=gh.LONG_TTL_MINUTES)
 
     pr._load_incremental_coverage([run])
@@ -80,13 +80,12 @@ def test_incremental_coverage_cache_miss_stores_result():
 
     pr._load_incremental_coverage([run])
 
-    run.fetch_artifact.assert_called_once_with("coverage", "coverage-details.json", cache=False)
+    run.fetch_artifact.assert_called_once_with("coverage", "coverage-details.json")
     cached = gh.disk_cache.get("incremental-coverage:42")
     assert cached is not None
-    data = json.loads(cached)
-    assert data["covered"] == 1
-    assert data["instrumented"] == 1
-    assert data["incremental"] == 1.0
+    assert cached["covered"] == 1
+    assert cached["instrumented"] == 1
+    assert cached["incremental"] == 1.0
 
 
 def test_incremental_coverage_zero_instrumented_lines():
@@ -95,7 +94,7 @@ def test_incremental_coverage_zero_instrumented_lines():
 
     gh.disk_cache.store(
         "incremental-coverage:42",
-        json.dumps({"covered": 0, "instrumented": 0, "incremental": None}),
+        {"covered": 0, "instrumented": 0, "incremental": None},
         ttl_minutes=gh.LONG_TTL_MINUTES)
 
     pr._load_incremental_coverage([run])

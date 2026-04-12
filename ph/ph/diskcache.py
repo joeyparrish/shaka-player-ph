@@ -62,7 +62,9 @@ class DiskCache(object):
       if time.time() >= expires_at:
         return None
 
-      if "text" in stored:
+      if "json" in stored:
+        return stored["json"]
+      elif "text" in stored:
         return stored["text"]
       else:
         return base64.b64decode(stored["bytes"])
@@ -89,8 +91,7 @@ class DiskCache(object):
         elif type(data) is bytes:
           stored["bytes"] = base64.b64encode(data).decode("utf8")
         else:
-          raise RuntimeError("Unexpected data type in cache: {}".format(
-                             type(data)))
+          stored["json"] = data
         json.dump(stored, f)
     except Exception as e:
       print("Exception storing cache file {}: {}".format(path, e),

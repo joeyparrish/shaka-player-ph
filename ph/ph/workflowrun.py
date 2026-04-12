@@ -4,7 +4,6 @@
 
 import dateutil.parser
 import io
-import json
 import sys
 import zipfile
 
@@ -53,7 +52,7 @@ class WorkflowRun(object):
       "flaky": self.flaky,
     }
 
-  def fetch_artifact(self, name, filename, cache):
+  def fetch_artifact(self, name, filename):
     results = gh.api_multiple(self.artifacts_url, "artifacts")
 
     zip_data = None
@@ -119,7 +118,7 @@ class WorkflowRun(object):
   @staticmethod
   def load_by_url(url):
     data = gh.api_single(url, WorkflowRun.is_immutable)
-    return WorkflowRun(json.loads(data))
+    return WorkflowRun(data)
 
   @staticmethod
   def average_greenness(runs):

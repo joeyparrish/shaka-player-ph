@@ -3,7 +3,7 @@ import pytest
 from ph.diskcache import DiskCache
 
 
-def test_store_and_get_default_ttl(tmp_path):
+def test_store_and_get(tmp_path):
     cache = DiskCache(str(tmp_path))
     cache.store("key1", "value1", ttl_minutes=120)
     assert cache.get("key1") == "value1"
@@ -27,6 +27,13 @@ def test_bytes_round_trip(tmp_path):
     cache = DiskCache(str(tmp_path))
     cache.store("key1", b"\x00\x01\x02", ttl_minutes=120)
     assert cache.get("key1") == b"\x00\x01\x02"
+
+
+def test_object_round_trip(tmp_path):
+    cache = DiskCache(str(tmp_path))
+    cache.store("key1", {"foo": "bar"}, ttl_minutes=120)
+    assert type(cache.get("key1")) == dict
+    assert cache.get("key1").get("foo") == "bar"
 
 
 def test_key_mismatch_returns_none(tmp_path):

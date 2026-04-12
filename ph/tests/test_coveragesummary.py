@@ -27,7 +27,7 @@ def _make_run(run_id, fetch_return=None):
 
 def test_coverage_summary_cache_hit_skips_fetch():
     run = _make_run(12345)
-    gh.disk_cache.store("coverage-summary:12345", json.dumps(0.75),
+    gh.disk_cache.store("coverage-summary:12345", 0.75,
                         ttl_minutes=gh.LONG_TTL_MINUTES)
 
     results = CoverageSummary.get_all([run])
@@ -47,16 +47,16 @@ def test_coverage_summary_cache_miss_stores_result():
 
     results = CoverageSummary.get_all([run])
 
-    run.fetch_artifact.assert_called_once_with("coverage", "coverage.json", cache=False)
+    run.fetch_artifact.assert_called_once_with("coverage", "coverage.json")
     assert len(results) == 1
     assert results[0].line_coverage == 0.75
     cached = gh.disk_cache.get("coverage-summary:12345")
-    assert json.loads(cached) == 0.75
+    assert cached == 0.75
 
 
 def test_coverage_summary_float_round_trip():
     run = _make_run(99999)
-    gh.disk_cache.store("coverage-summary:99999", json.dumps(1/3),
+    gh.disk_cache.store("coverage-summary:99999", 1/3,
                         ttl_minutes=gh.LONG_TTL_MINUTES)
 
     results = CoverageSummary.get_all([run])

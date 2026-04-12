@@ -41,13 +41,14 @@ def configure(burst_limit, rate_limit_per_hour, cache_folder, debug):
 
 def http_head(url):
   """Fetch HTTP headers via HEAD request. Caches with long TTL."""
-  cached = disk_cache.get(url)
-  if cached is not None:
-    return json.loads(cached)
+  cached_headers = disk_cache.get(url)
+  if cached_headers is not None:
+    return cached_headers
 
   response = requests_lib.head(url)
   headers = {k.lower(): v for k, v in response.headers.items()}
-  disk_cache.store(url, json.dumps(headers), ttl_minutes=LONG_TTL_MINUTES)
+  # This will be stored as a JSON dictionary.
+  disk_cache.store(url, headers, ttl_minutes=LONG_TTL_MINUTES)
   return headers
 
 
@@ -78,14 +79,17 @@ def _api_base(url_or_full_path, is_json, is_immutable_cb, cache):
   args = ["gh", "api", url_or_full_path]
   data = shell.run_command(args, text=is_json)
 
+  if is_json:
+    data = json.loads(data)
+
   if cache:
     is_immutable = _is_url_immutable(url_or_full_path)
     if is_immutable_cb is not None:
-      is_immutable = is_immutable_cb(json.loads(data))
+      is_immutable = is_immutable_cb(data)
 
     ttl_minutes = LONG_TTL_MINUTES if is_immutable else SHORT_TTL_MINUTES
 
-    # This will be stored as a JSON dictionary.
+    # This will be stored as bytes or JSON depending on the type.
     disk_cache.store(url_or_full_path, data, ttl_minutes=ttl_minutes)
 
   return data
@@ -111,10 +115,9 @@ def api_multiple(url_or_path, subkey=None, stop_predicate=None):
   results = []
   while True:
     next_page_url = url_or_path + "&page={}".format(page_number)
-    output = _api_base(next_page_url,
+    next_page = _api_base(next_page_url,
         is_json=True, is_immutable_cb=None, cache=True)
 
-    next_page = json.loads(output)
     if subkey is not None:
       next_page = next_page[subkey]
 

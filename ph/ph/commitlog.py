@@ -33,6 +33,7 @@ class CommitLog(object):
         "git", "log", "--format=%ct %D", "--decorate-refs=tags/*", "FETCH_HEAD",
       ]
       cached = shell.run_command(args)
+      # This will be stored as text.
       gh.disk_cache.store(cache_key, cached, ttl_minutes=ttl)
 
     lines = cached.strip().split("\n")
