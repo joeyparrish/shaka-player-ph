@@ -4,6 +4,7 @@
 
 import dateutil.parser
 import io
+import json
 import sys
 import zipfile
 
@@ -59,7 +60,7 @@ class WorkflowRun(object):
     for data in results:
       if data["name"] == name:
         try:
-          zip_data = gh.api_raw(data["archive_download_url"], cache=cache)
+          zip_data = gh.api_raw(data["archive_download_url"])
           break
         except RuntimeError as e:
           print(
@@ -118,7 +119,7 @@ class WorkflowRun(object):
   @staticmethod
   def load_by_url(url):
     data = gh.api_single(url, WorkflowRun.is_immutable)
-    return WorkflowRun(data)
+    return WorkflowRun(json.loads(data))
 
   @staticmethod
   def average_greenness(runs):

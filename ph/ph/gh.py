@@ -55,7 +55,7 @@ def _is_url_immutable(url):
   return re.search(r'/commits/[0-9a-f]{40}', url)
 
 
-def _api_base(url_or_full_path, is_text, ttl_minutes, cache=True):
+def _api_base(url_or_full_path, is_json, is_immutable_cb, cache):
   global rate_limiter
   global disk_cache
   global debug_api
@@ -76,42 +76,29 @@ def _api_base(url_or_full_path, is_text, ttl_minutes, cache=True):
 
   rate_limiter.wait()
   args = ["gh", "api", url_or_full_path]
-  data = shell.run_command(args, text=is_text)
+  data = shell.run_command(args, text=is_json)
 
   if cache:
+    is_immutable = _is_url_immutable(url_or_full_path)
+    if is_immutable_cb is not None:
+      is_immutable = is_immutable_cb(json.loads(data))
+
+    ttl_minutes = LONG_TTL_MINUTES if is_immutable else SHORT_TTL_MINUTES
+
+    # This will be stored as a JSON dictionary.
     disk_cache.store(url_or_full_path, data, ttl_minutes=ttl_minutes)
 
   return data
 
 
-def api_raw(url_or_path, cache=True):
+def api_raw(url_or_path):
   return _api_base(url_or_path,
-      is_text=False, ttl_minutes=SHORT_TTL_MINUTES, cache=cache)
+      is_json=False, is_immutable_cb=None, cache=False)
 
 
 def api_single(url_or_path, is_immutable_cb=None):
-  # For cache misses we may detect TTL from content
-  cached = disk_cache.get(url_or_path)
-  if cached is not None:
-    if debug_api:
-      print("CACHE HIT: {}".format(url_or_path), file=sys.stderr)
-    return json.loads(cached)
-
-  if debug_api:
-    print("CACHE MISS: {}".format(url_or_path), file=sys.stderr)
-
-  rate_limiter.wait()
-  raw = shell.run_command(["gh", "api", url_or_path], text=True)
-  parsed = json.loads(raw)
-
-  is_immutable = _is_url_immutable(url_or_path)
-  if is_immutable_cb is not None:
-    is_immutable = is_immutable_cb(parsed)
-
-  ttl_minutes = LONG_TTL_MINUTES if is_immutable else SHORT_TTL_MINUTES
-
-  disk_cache.store(url_or_path, raw, ttl_minutes=ttl_minutes)
-  return parsed
+  return _api_base(url_or_path,
+      is_json=True, is_immutable_cb=is_immutable_cb, cache=True)
 
 
 def api_multiple(url_or_path, subkey=None, stop_predicate=None):
@@ -120,14 +107,12 @@ def api_multiple(url_or_path, subkey=None, stop_predicate=None):
   else:
     url_or_path += "?page_size=100"
 
-  is_immutable = _is_url_immutable(url_or_path)
-  ttl_minutes = LONG_TTL_MINUTES if is_immutable else SHORT_TTL_MINUTES
-
   page_number = 1
   results = []
   while True:
     next_page_url = url_or_path + "&page={}".format(page_number)
-    output = _api_base(next_page_url, is_text=True, ttl_minutes=ttl_minutes)
+    output = _api_base(next_page_url,
+        is_json=True, is_immutable_cb=None, cache=True)
 
     next_page = json.loads(output)
     if subkey is not None:
